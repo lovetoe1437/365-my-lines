@@ -1,0 +1,205 @@
+---
+const completedLines = 0;
+const totalLines = 365;
+---
+
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+		<meta
+			name="description"
+			content="365 моих строк — один день, одна мысль."
+		/>
+
+		<title>365 моих строк</title>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Literata:opsz,wght@7..72,300;400&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+
+	<body>
+		<main class="cover">
+			<div class="cover__content">
+				<p class="cover__number">
+					{completedLines} / {totalLines}
+				</p>
+
+				<h1>365 моих строк</h1>
+
+				<p class="cover__subtitle">
+					Один день. Одна мысль.
+				</p>
+
+				<a class="cover__button" href="/lines">
+					Открыть строки
+					<span aria-hidden="true">→</span>
+				</a>
+			</div>
+
+			<p class="cover__footer">
+				Некоторые слова приходят не сразу.
+			</p>
+		</main>
+	</body>
+</html>
+
+<style>
+	:global(*) {
+		box-sizing: border-box;
+	}
+
+	:global(html) {
+		min-height: 100%;
+		background: #f4eee3;
+	}
+
+	:global(body) {
+		min-height: 100%;
+		margin: 0;
+		color: #29241e;
+		background:
+			radial-gradient(
+				circle at 50% 20%,
+				rgba(255, 255, 255, 0.65),
+				transparent 42%
+			),
+			#f4eee3;
+		font-family: "Literata", serif;
+	}
+
+	.cover {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100svh;
+		padding: 40px 24px 28px;
+		text-align: center;
+	}
+
+	.cover__content {
+		width: min(100%, 700px);
+		animation: reveal 1.2s ease both;
+	}
+
+	.cover__number {
+		margin: 0 0 32px;
+		color: #80664f;
+		font-family: "Cormorant Garamond", serif;
+		font-size: 15px;
+		letter-spacing: 0.22em;
+	}
+
+	h1 {
+		margin: 0;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(48px, 11vw, 90px);
+		font-weight: 500;
+		line-height: 0.95;
+		letter-spacing: -0.035em;
+		text-wrap: balance;
+	}
+
+	.cover__subtitle {
+		margin: 24px 0 0;
+		color: #766c60;
+		font-size: clamp(15px, 4vw, 19px);
+		font-weight: 300;
+		letter-spacing: 0.08em;
+	}
+
+	.cover__button {
+		display: inline-flex;
+		align-items: center;
+		gap: 13px;
+		margin-top: 52px;
+		padding: 15px 24px;
+		border: 1px solid rgba(58, 47, 36, 0.26);
+		border-radius: 999px;
+		color: #29241e;
+		background: rgba(251, 248, 242, 0.5);
+		font-size: 14px;
+		text-decoration: none;
+		transition:
+			transform 180ms ease,
+			background 180ms ease,
+			border-color 180ms ease;
+	}
+
+	.cover__button:hover {
+		border-color: rgba(58, 47, 36, 0.5);
+		background: #fbf8f2;
+		transform: translateY(-2px);
+	}
+
+	.cover__button:active {
+		transform: translateY(0);
+	}
+
+	.cover__button span {
+		font-size: 19px;
+		line-height: 1;
+		transition: transform 180ms ease;
+	}
+
+	.cover__button:hover span {
+		transform: translateX(3px);
+	}
+
+	.cover__footer {
+		position: absolute;
+		bottom: 28px;
+		margin: 0;
+		color: rgba(41, 36, 30, 0.56);
+		font-family: "Cormorant Garamond", serif;
+		font-size: 15px;
+		font-style: italic;
+		letter-spacing: 0.04em;
+		animation: reveal 1.2s 350ms ease both;
+	}
+
+	@keyframes reveal {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (max-height: 600px) {
+		.cover {
+			justify-content: flex-start;
+			padding-top: 70px;
+		}
+
+		.cover__footer {
+			position: static;
+			margin-top: 65px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.cover__content,
+		.cover__footer {
+			animation: none;
+		}
+
+		.cover__button,
+		.cover__button span {
+			transition: none;
+		}
+	}
+</style>

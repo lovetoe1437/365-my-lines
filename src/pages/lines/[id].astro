@@ -1,0 +1,329 @@
+---
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+	const lines = await getCollection("lines");
+
+	return lines.map((line) => ({
+		params: {
+			id: line.id,
+		},
+		props: {
+			line,
+		},
+	}));
+}
+
+const { line } = Astro.props;
+
+const allLines = (await getCollection("lines")).sort(
+	(a, b) => a.data.number - b.data.number
+);
+
+const currentIndex = allLines.findIndex(
+	(item) => item.id === line.id
+);
+
+const previousLine =
+	currentIndex > 0 ? allLines[currentIndex - 1] : null;
+
+const nextLine =
+	currentIndex < allLines.length - 1
+		? allLines[currentIndex + 1]
+		: null;
+
+const { Content } = await render(line);
+
+const formatDate = (date: Date) =>
+	new Intl.DateTimeFormat("ru-RU", {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	}).format(date);
+---
+
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+
+		<meta
+			name="description"
+			content={line.data.title ?? `Строка ${line.data.number}`}
+		/>
+
+		<title>
+			{line.data.title ?? `Строка ${line.data.number}`} —
+			365 моих строк
+		</title>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Literata:opsz,wght@7..72,300;400&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+
+	<body>
+		<main class="page">
+			<header class="header">
+				<a class="back-link" href="/lines">
+					← Все строки
+				</a>
+
+				<p class="counter">
+					{line.data.number} / {allLines.length}
+				</p>
+			</header>
+
+			<article class="line">
+				<div class="line__meta">
+					<p class="line__number">
+						Строка {String(line.data.number).padStart(3, "0")}
+					</p>
+
+					<time datetime={line.data.date.toISOString()}>
+						{formatDate(line.data.date)}
+					</time>
+				</div>
+
+				{
+					line.data.title && (
+						<h1>{line.data.title}</h1>
+					)
+				}
+
+				{
+					line.data.photo && (
+						<img
+							class="line__photo"
+							src={line.data.photo}
+							alt=""
+						/>
+					)
+				}
+
+				<div class="line__content">
+					<Content />
+				</div>
+			</article>
+
+			<nav class="navigation" aria-label="Навигация по строкам">
+				{
+					previousLine ? (
+						<a href={`/lines/${previousLine.id}`}>
+							<span>←</span>
+							<span>
+								<small>Назад</small>
+								Строка {previousLine.data.number}
+							</span>
+						</a>
+					) : (
+						<span class="navigation__empty"></span>
+					)
+				}
+
+				{
+					nextLine ? (
+						<a
+							class="navigation__next"
+							href={`/lines/${nextLine.id}`}
+						>
+							<span>
+								<small>Вперёд</small>
+								Строка {nextLine.data.number}
+							</span>
+							<span>→</span>
+						</a>
+					) : (
+						<a class="navigation__next" href="/lines">
+							<span>
+								<small>Вернуться</small>
+								Все строки
+							</span>
+							<span>→</span>
+						</a>
+					)
+				}
+			</nav>
+		</main>
+	</body>
+</html>
+
+<style>
+	:global(*) {
+		box-sizing: border-box;
+	}
+
+	:global(html) {
+		min-height: 100%;
+		background: #f4eee3;
+	}
+
+	:global(body) {
+		min-height: 100%;
+		margin: 0;
+		color: #29241e;
+		background:
+			radial-gradient(
+				circle at 50% 0%,
+				rgba(255, 255, 255, 0.72),
+				transparent 40%
+			),
+			#f4eee3;
+		font-family: "Literata", serif;
+	}
+
+	.page {
+		width: min(100%, 760px);
+		min-height: 100svh;
+		margin: 0 auto;
+		padding: 28px 22px 60px;
+	}
+
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+	}
+
+	.back-link {
+		color: #766c60;
+		font-size: 13px;
+		text-decoration: none;
+	}
+
+	.counter {
+		margin: 0;
+		color: #80664f;
+		font-family: "Cormorant Garamond", serif;
+		font-size: 15px;
+		letter-spacing: 0.16em;
+	}
+
+	.line {
+		margin-top: 90px;
+		animation: reveal 900ms ease both;
+	}
+
+	.line__meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		padding-bottom: 20px;
+		border-bottom: 1px solid rgba(58, 47, 36, 0.18);
+	}
+
+	.line__number {
+		margin: 0;
+		color: #80664f;
+		font-size: 11px;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+	}
+
+	time {
+		color: #766c60;
+		font-size: 11px;
+	}
+
+	h1 {
+		margin: 42px 0 0;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(42px, 11vw, 70px);
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: -0.03em;
+	}
+
+	.line__photo {
+		display: block;
+		width: 100%;
+		max-height: 620px;
+		margin-top: 42px;
+		border-radius: 3px;
+		object-fit: cover;
+	}
+
+	.line__content {
+		margin-top: 48px;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(28px, 7vw, 39px);
+		font-weight: 400;
+		line-height: 1.45;
+	}
+
+	.line__content :global(p) {
+		margin: 0 0 1em;
+	}
+
+	.navigation {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 18px;
+		margin-top: 100px;
+		padding-top: 26px;
+		border-top: 1px solid rgba(58, 47, 36, 0.18);
+	}
+
+	.navigation a {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		color: #29241e;
+		font-family: "Cormorant Garamond", serif;
+		font-size: 18px;
+		text-decoration: none;
+	}
+
+	.navigation small {
+		display: block;
+		margin-bottom: 3px;
+		color: #766c60;
+		font-family: "Literata", serif;
+		font-size: 10px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	.navigation__next {
+		justify-content: flex-end;
+		text-align: right;
+	}
+
+	@keyframes reveal {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (min-width: 700px) {
+		.page {
+			padding: 38px 34px 80px;
+		}
+
+		.line {
+			margin-top: 125px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.line {
+			animation: none;
+		}
+	}
+</style>

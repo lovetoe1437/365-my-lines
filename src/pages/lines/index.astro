@@ -1,0 +1,318 @@
+---
+import { getCollection } from "astro:content";
+
+const totalLines = 365;
+
+const lines = (await getCollection("lines")).sort(
+	(a, b) => a.data.number - b.data.number
+);
+
+const completedLines = lines.length;
+
+const formatDate = (date: Date) =>
+	new Intl.DateTimeFormat("ru-RU", {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	}).format(date);
+---
+
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+		<meta
+			name="description"
+			content="Все строки проекта «365 моих строк»."
+		/>
+
+		<title>Все строки — 365 моих строк</title>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Literata:opsz,wght@7..72,300;400&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+
+	<body>
+		<main class="page">
+			<header class="header">
+				<a class="back-link" href="/">
+					← На главную
+				</a>
+
+				<p class="counter">
+					{completedLines} / {totalLines}
+				</p>
+			</header>
+
+			<section class="intro">
+				<p class="eyebrow">Архив</p>
+				<h1>Все строки</h1>
+
+				<p class="description">
+					Один день. Одна мысль. Одна новая строка.
+				</p>
+			</section>
+
+			{
+				lines.length > 0 ? (
+					<section class="lines-list">
+						{
+							lines.map((line) => (
+								<a
+									class="line-card"
+									href={`/lines/${line.id}`}
+								>
+									<div class="line-card__top">
+										<span class="line-card__number">
+											{String(line.data.number).padStart(3, "0")}
+										</span>
+
+										<time datetime={line.data.date.toISOString()}>
+											{formatDate(line.data.date)}
+										</time>
+									</div>
+
+									<h2>
+										{line.data.title ?? `Строка ${line.data.number}`}
+									</h2>
+
+									<span class="line-card__arrow" aria-hidden="true">
+										→
+									</span>
+								</a>
+							))
+						}
+					</section>
+				) : (
+					<section class="empty-state">
+						<p class="empty-state__number">001</p>
+						<div class="empty-state__line" />
+						<p class="empty-state__text">
+							Первая строка скоро появится здесь.
+						</p>
+					</section>
+				)
+			}
+		</main>
+	</body>
+</html>
+
+<style>
+	:global(*) {
+		box-sizing: border-box;
+	}
+
+	:global(html) {
+		min-height: 100%;
+		background: #f4eee3;
+	}
+
+	:global(body) {
+		min-height: 100%;
+		margin: 0;
+		color: #29241e;
+		background:
+			radial-gradient(
+				circle at 50% 0%,
+				rgba(255, 255, 255, 0.7),
+				transparent 38%
+			),
+			#f4eee3;
+		font-family: "Literata", serif;
+	}
+
+	.page {
+		width: min(100%, 900px);
+		min-height: 100svh;
+		margin: 0 auto;
+		padding: 28px 22px 70px;
+	}
+
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+	}
+
+	.back-link {
+		color: #766c60;
+		font-size: 13px;
+		text-decoration: none;
+		transition: color 180ms ease;
+	}
+
+	.back-link:hover {
+		color: #29241e;
+	}
+
+	.counter {
+		margin: 0;
+		color: #80664f;
+		font-family: "Cormorant Garamond", serif;
+		font-size: 15px;
+		letter-spacing: 0.18em;
+	}
+
+	.intro {
+		margin-top: 85px;
+		animation: reveal 900ms ease both;
+	}
+
+	.eyebrow {
+		margin: 0 0 12px;
+		color: #80664f;
+		font-size: 11px;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+	}
+
+	h1 {
+		margin: 0;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(52px, 12vw, 86px);
+		font-weight: 500;
+		line-height: 0.95;
+		letter-spacing: -0.035em;
+	}
+
+	.description {
+		max-width: 530px;
+		margin: 28px 0 0;
+		color: #766c60;
+		font-size: 15px;
+		font-weight: 300;
+		line-height: 1.8;
+	}
+
+	.lines-list {
+		margin-top: 72px;
+		border-top: 1px solid rgba(58, 47, 36, 0.18);
+		animation: reveal 900ms 180ms ease both;
+	}
+
+	.line-card {
+		position: relative;
+		display: block;
+		padding: 28px 42px 28px 0;
+		border-bottom: 1px solid rgba(58, 47, 36, 0.18);
+		color: #29241e;
+		text-decoration: none;
+		transition:
+			padding-left 180ms ease,
+			background 180ms ease;
+	}
+
+	.line-card:hover {
+		padding-left: 12px;
+		background: rgba(251, 248, 242, 0.45);
+	}
+
+	.line-card__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+	}
+
+	.line-card__number {
+		color: #80664f;
+		font-family: "Cormorant Garamond", serif;
+		font-size: 14px;
+		letter-spacing: 0.2em;
+	}
+
+	time {
+		color: #766c60;
+		font-size: 11px;
+	}
+
+	h2 {
+		margin: 18px 0 0;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(28px, 7vw, 38px);
+		font-weight: 500;
+		line-height: 1.1;
+	}
+
+	.line-card__arrow {
+		position: absolute;
+		right: 4px;
+		bottom: 30px;
+		color: #80664f;
+		font-size: 21px;
+		transition: transform 180ms ease;
+	}
+
+	.line-card:hover .line-card__arrow {
+		transform: translateX(4px);
+	}
+
+	.empty-state {
+		margin-top: 95px;
+		padding: 28px 0;
+		border-top: 1px solid rgba(58, 47, 36, 0.18);
+		border-bottom: 1px solid rgba(58, 47, 36, 0.18);
+	}
+
+	.empty-state__number {
+		margin: 0;
+		color: rgba(128, 102, 79, 0.72);
+		font-family: "Cormorant Garamond", serif;
+		font-size: 14px;
+		letter-spacing: 0.2em;
+	}
+
+	.empty-state__line {
+		width: 42px;
+		height: 1px;
+		margin: 24px 0;
+		background: rgba(58, 47, 36, 0.28);
+	}
+
+	.empty-state__text {
+		margin: 0;
+		color: #766c60;
+		font-family: "Cormorant Garamond", serif;
+		font-size: clamp(24px, 7vw, 34px);
+		font-style: italic;
+		line-height: 1.3;
+	}
+
+	@keyframes reveal {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (min-width: 700px) {
+		.page {
+			padding: 38px 34px 90px;
+		}
+
+		.intro {
+			margin-top: 120px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.intro,
+		.lines-list {
+			animation: none;
+		}
+	}
+</style>    
