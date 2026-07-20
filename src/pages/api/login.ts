@@ -32,5 +32,5 @@ export const POST: APIRoute = async (context) => {
 
   createAdminSession(context);
 
-  return context.redirect("/dashboard", 303);
+  return context.redirect("/book", 303);
 };

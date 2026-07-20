@@ -1,0 +1,214 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+
+const today = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+---
+
+<AppLayout title="Новая запись">
+  <main class="write">
+    <form class="write__container" id="entry-form">
+      <p class="write__label">Личный дневник</p>
+
+      <p class="write__date">{today}</p>
+
+      <div class="write__divider"></div>
+
+      <input
+        class="write__title"
+        type="text"
+        name="title"
+        placeholder="Что останется на этой странице?"
+        autocomplete="off"
+        required
+      />
+
+      <textarea
+        class="write__content"
+        name="content"
+        placeholder="Начни писать..."
+        required
+      ></textarea>
+
+      <p class="write__message" id="form-message" aria-live="polite"></p>
+
+      <div class="write__actions">
+        <button class="write__submit" type="submit">
+          Сохранить запись
+        </button>
+      </div>
+    </form>
+  </main>
+</AppLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("#entry-form");
+  const message = document.querySelector<HTMLParagraphElement>("#form-message");
+  const submitButton =
+    document.querySelector<HTMLButtonElement>(".write__submit");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!message || !submitButton) return;
+
+    message.textContent = "";
+    submitButton.disabled = true;
+    submitButton.textContent = "Сохраняем...";
+
+    try {
+      const response = await fetch("/api/pages", {
+        method: "POST",
+        body: new FormData(form),
+      });
+
+      const result = await response.json() as {
+  ok: boolean;
+  id?: number;
+  message?: string;
+};
+
+      if (!response.ok) {
+        throw new Error(
+          result.message ?? "Не удалось сохранить запись.",
+        );
+      }
+
+      submitButton.textContent = "Запись сохранена ✓";
+
+      window.setTimeout(() => {
+        window.location.href = "/book";
+      }, 1200);
+    } catch (error) {
+      message.textContent =
+        error instanceof Error
+          ? error.message
+          : "Не удалось сохранить запись.";
+
+      submitButton.disabled = false;
+      submitButton.textContent = "Сохранить запись";
+    }
+  });
+</script>
+
+<style>
+  .write {
+    padding: 5rem 1.5rem;
+  }
+
+  .write__container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .write__label {
+    margin: 0;
+    text-align: center;
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+
+  .write__date {
+    margin: 0.8rem 0 0;
+    text-align: center;
+    font-size: 1.15rem;
+    color: var(--muted);
+  }
+
+  .write__divider {
+    width: 100%;
+    height: 1px;
+    margin: 2.5rem 0 3.5rem;
+    background: var(--line);
+  }
+
+  .write__title {
+    width: 100%;
+    margin: 0 0 2.4rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: clamp(1.7rem, 4vw, 2.25rem);
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .write__title::placeholder,
+  .write__content::placeholder {
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
+  .write__content {
+    width: 100%;
+    min-height: 420px;
+    border: 0;
+    outline: 0;
+    resize: vertical;
+    background: transparent;
+    font: inherit;
+    font-size: 1.08rem;
+    line-height: 1.95;
+    color: var(--ink);
+  }
+
+  .write__message {
+    min-height: 1.5rem;
+    margin: 1.5rem 0 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .write__actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .write__submit {
+    min-width: 210px;
+    padding: 0.95rem 1.7rem;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--accent);
+    font: inherit;
+    font-size: 1rem;
+    color: var(--paper-light);
+    cursor: pointer;
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  .write__submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .write__submit:disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
+
+  @media (max-width: 700px) {
+    .write {
+      padding-top: 3rem;
+    }
+
+    .write__divider {
+      margin-bottom: 2.5rem;
+    }
+
+    .write__content {
+      min-height: 320px;
+    }
+
+    .write__submit {
+      width: 100%;
+    }
+  }
+</style>

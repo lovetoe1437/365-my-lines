@@ -1,0 +1,418 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import { env } from "cloudflare:workers";
+import { getPage } from "../../../lib/db/pages";
+
+export const prerender = false;
+
+const id = Number(Astro.params.id);
+
+if (!Number.isInteger(id) || id <= 0) {
+  return Astro.redirect("/book");
+}
+
+const page = await getPage(env.DB, id);
+
+if (!page) {
+  return new Response("Страница не найдена", {
+    status: 404,
+  });
+}
+---
+
+<AppLayout
+  title={`Редактирование — ${page.title}`}
+  class="book-page"
+>
+  <main class="editor">
+    <a class="back" href={`/pages/${page.id}`}>
+      ← Вернуться к записи
+    </a>
+
+    <header class="editor__header">
+      <p class="editor__label">Управление страницей</p>
+      <h1>Редактирование записи</h1>
+    </header>
+
+    <form id="edit-form">
+      <label for="title">Название</label>
+
+      <input
+        id="title"
+        name="title"
+        value={page.title}
+        placeholder="Название записи"
+        required
+      />
+
+      <label for="content">Текст страницы</label>
+
+      <textarea
+        id="content"
+        name="content"
+        rows="14"
+        required
+      >{page.content}</textarea>
+
+      <div class="editor__actions">
+        <button id="save-button" class="save-button" type="submit">
+          Сохранить изменения
+        </button>
+
+        <button id="open-delete-dialog" class="delete-button" type="button">
+          Удалить запись
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="delete-dialog__content">
+      <p class="delete-dialog__label">Подтверждение</p>
+
+      <h2>Удалить запись?</h2>
+
+      <p class="delete-dialog__text">
+        Эта страница будет удалена навсегда. Восстановить её после удаления
+        будет невозможно.
+      </p>
+
+      <div class="delete-dialog__actions">
+        <button id="cancel-delete" class="cancel-button" type="button">
+          Отмена
+        </button>
+
+        <button id="confirm-delete" class="confirm-delete-button" type="button">
+          Удалить
+        </button>
+      </div>
+    </div>
+  </dialog>
+</AppLayout>
+
+<script define:vars={{ id }}>
+  const form = document.getElementById("edit-form");
+  const titleInput = document.getElementById("title");
+  const contentInput = document.getElementById("content");
+  const saveButton = document.getElementById("save-button");
+
+  const deleteDialog = document.getElementById("delete-dialog");
+  const openDeleteDialogButton = document.getElementById(
+    "open-delete-dialog"
+  );
+  const cancelDeleteButton = document.getElementById("cancel-delete");
+  const confirmDeleteButton = document.getElementById("confirm-delete");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (
+      !(titleInput instanceof HTMLInputElement) ||
+      !(contentInput instanceof HTMLTextAreaElement) ||
+      !(saveButton instanceof HTMLButtonElement)
+    ) {
+      return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.textContent = "Сохраняем…";
+
+    try {
+      const formData = new FormData();
+      formData.set("title", titleInput.value);
+      formData.set("content", contentInput.value);
+
+      const response = await fetch(`/api/pages/${id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.ok) {
+        window.location.href = `/pages/${id}`;
+        return;
+      }
+
+      alert(
+        result.message ??
+          "Не удалось сохранить изменения. Попробуй ещё раз."
+      );
+    } catch (error) {
+      console.error("Не удалось сохранить изменения:", error);
+
+      alert("Произошла ошибка соединения. Попробуй ещё раз.");
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "Сохранить изменения";
+    }
+  });
+
+  openDeleteDialogButton?.addEventListener("click", () => {
+    if (deleteDialog instanceof HTMLDialogElement) {
+      deleteDialog.showModal();
+    }
+  });
+
+  cancelDeleteButton?.addEventListener("click", () => {
+    if (deleteDialog instanceof HTMLDialogElement) {
+      deleteDialog.close();
+    }
+  });
+
+  deleteDialog?.addEventListener("click", (event) => {
+    if (
+      deleteDialog instanceof HTMLDialogElement &&
+      event.target === deleteDialog
+    ) {
+      deleteDialog.close();
+    }
+  });
+
+  confirmDeleteButton?.addEventListener("click", async () => {
+    if (!(confirmDeleteButton instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    confirmDeleteButton.disabled = true;
+    confirmDeleteButton.textContent = "Удаляем…";
+
+    try {
+      const response = await fetch(`/api/pages/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.ok) {
+        window.location.href = "/book";
+        return;
+      }
+
+      alert(
+        result.message ??
+          "Не удалось удалить запись. Попробуй ещё раз."
+      );
+    } catch (error) {
+      console.error("Не удалось удалить запись:", error);
+
+      alert("Произошла ошибка соединения. Попробуй ещё раз.");
+    } finally {
+      confirmDeleteButton.disabled = false;
+      confirmDeleteButton.textContent = "Удалить";
+    }
+  });
+</script>
+
+<style>
+  .editor {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .back {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 180ms ease;
+  }
+
+  .back:hover {
+    color: var(--ink);
+  }
+
+  .editor__header {
+    margin: 4rem 0 2.5rem;
+  }
+
+  .editor__label,
+  .delete-dialog__label {
+    margin: 0 0 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    margin: 0;
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(2.8rem, 8vw, 4.8rem);
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  form {
+    display: grid;
+    gap: 1rem;
+  }
+
+  label {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.55);
+    font: inherit;
+    color: var(--ink);
+    outline: none;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease;
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  textarea {
+    min-height: 350px;
+    resize: vertical;
+    line-height: 1.65;
+  }
+
+  .editor__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      background 180ms ease;
+  }
+
+  button:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+
+  .save-button {
+    padding: 1rem 1.5rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper-light);
+  }
+
+  .delete-button {
+    padding: 0.8rem 0;
+    border: none;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    color: #8b3f38;
+  }
+
+  .delete-button:hover {
+    border-bottom-color: currentColor;
+  }
+
+  .delete-dialog {
+    width: min(calc(100% - 2rem), 470px);
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--paper-light);
+    color: var(--ink);
+    box-shadow: 0 24px 70px rgba(41, 36, 30, 0.25);
+  }
+
+  .delete-dialog::backdrop {
+    background: rgba(41, 36, 30, 0.58);
+    backdrop-filter: blur(3px);
+  }
+
+  .delete-dialog__content {
+    padding: clamp(2rem, 7vw, 3rem);
+  }
+
+  .delete-dialog h2 {
+    margin: 0;
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(2.2rem, 7vw, 3.3rem);
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .delete-dialog__text {
+    margin: 1.5rem 0 0;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .delete-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-top: 2.2rem;
+  }
+
+  .cancel-button,
+  .confirm-delete-button {
+    padding: 0.85rem 1.2rem;
+  }
+
+  .cancel-button {
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .confirm-delete-button {
+    border: 1px solid #8b3f38;
+    background: #8b3f38;
+    color: white;
+  }
+
+  @media (max-width: 560px) {
+    .editor {
+      padding-top: 1.5rem;
+    }
+
+    .editor__header {
+      margin-top: 3rem;
+    }
+
+    .editor__actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .save-button,
+    .delete-button {
+      width: 100%;
+    }
+
+    .delete-button {
+      padding: 1rem;
+    }
+
+    .delete-dialog__actions {
+      flex-direction: column-reverse;
+    }
+
+    .cancel-button,
+    .confirm-delete-button {
+      width: 100%;
+    }
+  }
+</style>
