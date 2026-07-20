@@ -21,6 +21,7 @@ const pageTitle =
 const pathname = Astro.url.pathname;
 
 const showNavigation =
+  pathname === "/" ||
   pathname === "/book" ||
   pathname === "/write" ||
   pathname.startsWith("/pages/") ||
