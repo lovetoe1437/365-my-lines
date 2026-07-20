@@ -1,0 +1,55 @@
+﻿---
+const error = Astro.url.searchParams.get("error");
+
+const errorMessage =
+  error === "wrong-password"
+    ? "Неверный пароль"
+    : error === "invalid"
+      ? "Введите пароль"
+      : null;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Вход — 365 моих строк</title>
+  </head>
+
+  <body style="font-family: sans-serif; max-width: 500px; margin: 60px auto; padding: 0 20px;">
+    <main>
+      <h1>365 моих строк</h1>
+      <p>Войдите, чтобы продолжить.</p>
+
+      {errorMessage && (
+        <p style="color: #a11;">
+          {errorMessage}
+        </p>
+      )}
+
+      <form method="POST" action="/api/login">
+        <label for="password">Пароль</label>
+
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          style="display: block; width: 100%; box-sizing: border-box; padding: 12px; margin-top: 8px;"
+        />
+
+        <button
+          type="submit"
+          style="margin-top: 16px; padding: 10px 18px;"
+        >
+          Войти
+        </button>
+      </form>
+    </main>
+  </body>
+</html>
