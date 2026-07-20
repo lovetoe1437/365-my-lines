@@ -1,20 +1,17 @@
 ---
-import { getCollection, render } from "astro:content";
+import { getCollection, getEntry, render } from "astro:content";
 
-export async function getStaticPaths() {
-	const lines = await getCollection("lines");
+const { id } = Astro.params;
 
-	return lines.map((line) => ({
-		params: {
-			id: line.id,
-		},
-		props: {
-			line,
-		},
-	}));
+if (!id) {
+	return Astro.redirect("/lines");
 }
 
-const { line } = Astro.props;
+const line = await getEntry("lines", id);
+
+if (!line) {
+	return Astro.redirect("/lines");
+}
 
 const allLines = (await getCollection("lines")).sort(
 	(a, b) => a.data.number - b.data.number
@@ -28,7 +25,7 @@ const previousLine =
 	currentIndex > 0 ? allLines[currentIndex - 1] : null;
 
 const nextLine =
-	currentIndex < allLines.length - 1
+	currentIndex >= 0 && currentIndex < allLines.length - 1
 		? allLines[currentIndex + 1]
 		: null;
 
