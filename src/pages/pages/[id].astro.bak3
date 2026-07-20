@@ -86,36 +86,15 @@ const formatDate = (value: string) => {
     </footer>
   </main>
 
-  <dialog
-    id="delete-dialog"
-    class="delete-dialog"
-    aria-labelledby="delete-dialog-title"
-  >
-    <div class="delete-dialog__frame" aria-hidden="true"></div>
-
-    <button
-      id="close-delete-dialog"
-      class="delete-dialog__close"
-      type="button"
-      aria-label="Закрыть окно"
-    >
-      ×
-    </button>
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="delete-dialog__header">
+      <p class="delete-dialog__label">Подтверждение</p>
+      <h2>Удалить запись?</h2>
+    </div>
 
     <div class="delete-dialog__content">
-      <span class="delete-dialog__top-ornament" aria-hidden="true">✦</span>
-
-      <h2 id="delete-dialog-title">Удалить запись?</h2>
-
-      <div class="delete-dialog__divider" aria-hidden="true">
-        <span></span>
-        <span>✦</span>
-        <span></span>
-      </div>
-
       <p class="delete-dialog__text">
-        Эта страница будет удалена навсегда.<br />
-        Восстановить её после удаления<br />
+        Эта страница будет удалена навсегда. Восстановить её после удаления
         будет невозможно.
       </p>
 
@@ -138,9 +117,6 @@ const formatDate = (value: string) => {
     "open-delete-dialog"
   );
   const cancelDeleteButton = document.getElementById("cancel-delete");
-  const closeDeleteDialogButton = document.getElementById(
-    "close-delete-dialog"
-  );
   const confirmDeleteButton = document.getElementById("confirm-delete");
 
   openDeleteDialogButton?.addEventListener("click", () => {
@@ -149,14 +125,11 @@ const formatDate = (value: string) => {
     }
   });
 
-  const closeDeleteDialog = () => {
+  cancelDeleteButton?.addEventListener("click", () => {
     if (deleteDialog instanceof HTMLDialogElement) {
       deleteDialog.close();
     }
-  };
-
-  cancelDeleteButton?.addEventListener("click", closeDeleteDialog);
-  closeDeleteDialogButton?.addEventListener("click", closeDeleteDialog);
+  });
 
   deleteDialog?.addEventListener("click", (event) => {
     if (
@@ -354,219 +327,82 @@ const formatDate = (value: string) => {
   }
 
   .delete-dialog {
-    width: min(calc(100% - 2rem), 520px);
-    max-height: calc(100vh - 2rem);
+    width: min(calc(100% - 2rem), 470px);
     padding: 0;
-    overflow: visible;
-    border: 1px solid rgba(93, 72, 54, 0.42);
-    border-radius: 14px;
-    background:
-      radial-gradient(
-        circle at 50% 0%,
-        rgba(255, 255, 255, 0.7),
-        transparent 45%
-      ),
-      #fbf7ef;
+    border: 1px solid var(--line);
+    background: var(--paper-light);
     color: var(--ink);
-    box-shadow:
-      0 30px 90px rgba(28, 24, 20, 0.34),
-      0 8px 25px rgba(28, 24, 20, 0.18);
-    opacity: 0;
-    transform: translateY(10px) scale(0.965);
-    transition:
-      opacity 220ms ease,
-      transform 220ms ease,
-      overlay 220ms ease allow-discrete,
-      display 220ms ease allow-discrete;
-  }
-
-  .delete-dialog[open] {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  @starting-style {
-    .delete-dialog[open] {
-      opacity: 0;
-      transform: translateY(10px) scale(0.965);
-    }
+    box-shadow: 0 24px 70px rgba(41, 36, 30, 0.25);
   }
 
   .delete-dialog::backdrop {
-    background: rgba(46, 41, 35, 0.56);
-    backdrop-filter: blur(10px) saturate(0.78);
-    opacity: 0;
-    transition:
-      opacity 220ms ease,
-      overlay 220ms ease allow-discrete,
-      display 220ms ease allow-discrete;
+    background: rgba(41, 36, 30, 0.58);
+    backdrop-filter: blur(3px);
   }
 
-  .delete-dialog[open]::backdrop {
-    opacity: 1;
-  }
-
-  @starting-style {
-    .delete-dialog[open]::backdrop {
-      opacity: 0;
-    }
-  }
-
-  .delete-dialog__frame {
-    position: absolute;
-    inset: 8px;
-    pointer-events: none;
-    border: 1px solid rgba(128, 102, 79, 0.28);
-    border-radius: 9px;
-  }
-
-  .delete-dialog__frame::before,
-  .delete-dialog__frame::after {
-    position: absolute;
-    width: 19px;
-    height: 19px;
-    border-color: rgba(128, 102, 79, 0.48);
-    content: "";
-  }
-
-  .delete-dialog__frame::before {
-    top: -1px;
-    left: -1px;
-    border-top: 1px solid;
-    border-left: 1px solid;
-    border-top-left-radius: 8px;
-  }
-
-  .delete-dialog__frame::after {
-    right: -1px;
-    bottom: -1px;
-    border-right: 1px solid;
-    border-bottom: 1px solid;
-    border-bottom-right-radius: 8px;
-  }
-
-  .delete-dialog__close {
-    position: absolute;
-    z-index: 2;
-    top: 1.15rem;
-    right: 1.25rem;
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--ink);
-    font-family: Arial, sans-serif;
-    font-size: 1.55rem;
-    font-weight: 300;
-    line-height: 1;
-    cursor: pointer;
-    place-items: center;
-    transition:
-      background 180ms ease,
-      transform 180ms ease;
-  }
-
-  .delete-dialog__close:hover {
-    background: rgba(58, 47, 36, 0.07);
-    transform: rotate(4deg);
+  .delete-dialog__header {
+    padding: clamp(1.7rem, 6vw, 2.4rem) clamp(2rem, 7vw, 3rem);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(139, 63, 56, 0.98),
+        rgba(112, 48, 43, 0.98)
+      );
+    color: #fffaf4;
   }
 
   .delete-dialog__content {
-    position: relative;
-    z-index: 1;
-    padding: clamp(2.6rem, 8vw, 4rem) clamp(2rem, 8vw, 4.2rem)
-      clamp(2.2rem, 7vw, 3.4rem);
-    text-align: center;
+    padding: clamp(1.8rem, 6vw, 2.6rem) clamp(2rem, 7vw, 3rem);
   }
 
-  .delete-dialog__top-ornament {
-    display: block;
-    margin-bottom: 1.2rem;
-    color: var(--accent);
-    font-size: 0.85rem;
+  .delete-dialog__label {
+    margin: 0 0 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 250, 244, 0.72);
   }
 
   .delete-dialog h2 {
     margin: 0;
     font-family: "Cormorant Garamond", serif;
-    font-size: clamp(2.45rem, 8vw, 3.8rem);
+    font-size: clamp(2.2rem, 7vw, 3.3rem);
     font-weight: 500;
     line-height: 1;
-    color: var(--ink);
-  }
-
-  .delete-dialog__divider {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 0.85rem;
-    width: min(100%, 180px);
-    margin: 1.45rem auto 1.35rem;
-    color: var(--accent);
-    font-size: 0.6rem;
-  }
-
-  .delete-dialog__divider span:first-child,
-  .delete-dialog__divider span:last-child {
-    height: 1px;
-    background: rgba(128, 102, 79, 0.3);
+    color: #fffaf4;
   }
 
   .delete-dialog__text {
     margin: 0;
-    font-size: 0.98rem;
-    line-height: 1.7;
+    line-height: 1.65;
     color: var(--muted);
   }
 
   .delete-dialog__actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 2.35rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-top: 2.2rem;
   }
 
   .cancel-button,
   .confirm-delete-button {
-    min-height: 48px;
     padding: 0.85rem 1.2rem;
-    border-radius: 6px;
     font: inherit;
-    font-weight: 600;
     cursor: pointer;
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease,
-      background 180ms ease;
   }
 
   .cancel-button {
-    border: 1px solid rgba(128, 102, 79, 0.48);
-    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid var(--line);
+    background: transparent;
     color: var(--ink);
   }
 
   .confirm-delete-button {
-    border: 1px solid #9b302c;
-    background: linear-gradient(180deg, #b4413b, #982f2b);
-    color: #fffaf4;
-    box-shadow: 0 8px 20px rgba(139, 47, 43, 0.18);
-  }
-
-  .cancel-button:hover,
-  .confirm-delete-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .cancel-button:hover {
-    background: rgba(128, 102, 79, 0.08);
-  }
-
-  .confirm-delete-button:hover:not(:disabled) {
-    box-shadow: 0 10px 25px rgba(139, 47, 43, 0.28);
+    border: 1px solid #8b3f38;
+    background: #8b3f38;
+    color: white;
   }
 
   .reading__footer {
@@ -622,24 +458,13 @@ const formatDate = (value: string) => {
       padding: 0.9rem;
     }
 
-    .delete-dialog {
-      width: min(calc(100% - 1.25rem), 520px);
-    }
-
-    .delete-dialog__content {
-      padding: 3rem 1.6rem 2rem;
-    }
-
     .delete-dialog__actions {
-      grid-template-columns: 1fr;
+      flex-direction: column-reverse;
     }
 
-    .cancel-button {
-      order: 2;
-    }
-
+    .cancel-button,
     .confirm-delete-button {
-      order: 1;
+      width: 100%;
     }
   }
 </style>
