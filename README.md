@@ -1,54 +1,87 @@
-# Astro Starter Kit: Minimal
+# 365 моих строк
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Премиальная цифровая книга, продолжающая печатное издание после перехода по QR-коду. Проект состоит из публичной «Книги» с завершёнными страницами и личного «Дневника» автора.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Главный принцип проекта зафиксирован в `PROJECT_CONTEXT.md`: любое техническое и визуальное решение должно сохранять ощущение настоящей книги.
 
-## 🚀 Project Structure
+## Технологии
 
-Inside of your Astro project, you'll see the following folders and files:
+- Astro 7 в серверном режиме;
+- Cloudflare Workers;
+- Cloudflare D1;
+- TypeScript и CSS без клиентского фреймворка;
+- локальные шрифты и статические ресурсы.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+Требуется Node.js `22.12.0` или новее.
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Unspoken 1.7
-
-После обновления примени новую D1-миграцию:
+## Локальный запуск
 
 ```bash
+npm install
 npx wrangler d1 migrations apply 365-my-lines-db --local
+npm run dev
+```
+
+Сайт будет доступен по адресу `http://localhost:4321`.
+
+Для авторского входа нужен локальный файл `.dev.vars`:
+
+```dotenv
+ADMIN_PASSWORD=замените-на-надежный-пароль
+SESSION_SECRET=замените-на-длинную-случайную-строку
+```
+
+`.dev.vars` и другие файлы с секретами не должны попадать в Git.
+
+## Проверки
+
+```bash
+npm test
+npm run build
+```
+
+`npm test` запускает изолированные тесты критической логики редакторов. `npm run build` проверяет production-сборку для Cloudflare.
+
+## Основные маршруты
+
+- `/` — обложка и вход в цифровую книгу;
+- `/lines` — оглавление книги;
+- `/lines/:id` — чтение страницы книги;
+- `/book` — личный дневник;
+- `/pages/:id` — чтение записи дневника;
+- `/login` — авторский вход;
+- `/write` — защищённый выбор редактора;
+- `/unspoken` — эпилог или скрытая страница в зависимости от настройки.
+
+Маршруты создания, редактирования и API защищены авторской сессией.
+
+## Структура
+
+- `src/pages` — страницы и API-маршруты;
+- `src/components` — книжные, редакторские и системные компоненты;
+- `src/lib/db` — доступ к D1;
+- `src/lib/auth` — пароль и авторская сессия;
+- `src/lib/editor` — общая логика редакторов и черновиков;
+- `src/lib/validation` — серверные правила входных данных;
+- `src/styles` — дизайн-токены и общие стили;
+- `migrations` — последовательные миграции D1;
+- `tests` — автоматические проверки изолированной логики;
+- `docs` — архитектура, дизайн-система и roadmap.
+
+Подробности: `docs/PROJECT_STRUCTURE.md`, `docs/ARCHITECTURE.md` и `docs/EDITOR_FOUNDATION.md`.
+
+## Развёртывание
+
+Перед публикацией:
+
+1. выполнить `npm test`;
+2. выполнить `npm run build`;
+3. применить D1-миграции к удалённой базе;
+4. проверить bindings `DB` и `SESSION`;
+5. задать production-секреты через Cloudflare, не сохраняя их в репозитории.
+
+```bash
 npx wrangler d1 migrations apply 365-my-lines-db --remote
 ```
 
-Редактор доступен по адресу `/unspoken/edit` после входа администратора. В нём можно менять весь текст и выбирать режим отображения: скрытая страница, эпилог книги или отдельная ссылка внизу дневника.
+Точные действия финального выпуска фиксируются в `docs/ROADMAP.md`.

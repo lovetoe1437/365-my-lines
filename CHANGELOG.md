@@ -291,3 +291,14 @@
 - Restored the book reading composition styles accidentally removed during TASK-A2.
 - Restored the intended narrow prose column, left-aligned body text, heading spacing, ornaments, and responsive typography.
 - Kept the shared `ReadingNavigation` component and its navigation behavior unchanged.
+# Подготовка к 1.0 — 2026-07-23
+
+- Исправлены критические сценарии создания, редактирования и удаления страниц.
+- Стабилизирована работа редакторов после завершения авторской сессии.
+- Даты редакторов переведены на локальный календарный день.
+- Улучшена доступность редакторов, навигации и диалогов.
+- Шрифты подключены локально без изменения книжной типографики.
+- Общая логика редакторов вынесена в `src/lib/editor`.
+- Добавлена безопасная работа с ответами API, черновиками и ограниченным `localStorage`.
+- Устранено дублирование идентификатора индикатора черновика.
+- Добавлены автоматические тесты критической логики редакторов.

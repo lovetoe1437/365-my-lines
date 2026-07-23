@@ -1,44 +1,50 @@
-# Editor Foundation
+# Основа редакторов
 
-## Purpose
+Редактор книги и редактор дневника сохраняют разное визуальное настроение, но используют общие правила поведения.
 
-The book-line editor and diary editor intentionally have different visual moods, but they share one behavioural foundation.
+## Модули
 
-Shared behaviour lives in:
+- `createEditor.ts` — создание новой страницы, автосохранение, счётчик и отправка формы;
+- `initBookLineEditor.ts` — редактирование и удаление существующей страницы книги;
+- `initDiaryPageEditor.ts` — редактирование и удаление существующей записи дневника;
+- `editorRuntime.ts` — безопасная работа с JSON, `localStorage` и завершившейся сессией;
+- `messages.ts` — книжные подсказки и сообщения после сохранения;
+- `src/styles/editor.css` — общая визуальная основа редакторов.
 
-```text
-src/lib/editor/createEditor.ts
-```
+## Общие гарантии
 
-Shared editor styles live in:
+- повреждённый ответ API не вызывает необработанную ошибку;
+- повреждённый черновик удаляется безопасно;
+- запрет или переполнение `localStorage` не блокирует редактор;
+- черновик очищается только после успешного сохранения;
+- ответ `401` возвращает интерфейс в рабочее состояние и предлагает вход;
+- кнопка не допускает повторной отправки во время сохранения;
+- пользовательские переносы строк сохраняются.
 
-```text
-src/styles/editor.css
-```
+## Конфигурация создания
 
-## What the shared module controls
+`createEditor.ts` получает только различающиеся параметры:
 
-- restoring a local draft;
-- delayed draft autosave;
-- character counting;
-- optional textarea auto-resizing;
-- submit loading state;
-- API error display;
-- clearing a saved draft after a successful request;
-- redirecting to the created page.
-
-## Page-specific configuration
-
-Each editor supplies only the values that are unique to it:
-
-- localStorage key;
+- ключ черновика;
 - API endpoint;
-- redirect path;
-- save-button text;
-- optional minimum textarea height.
+- адрес перенаправления;
+- подписи кнопки;
+- книжные сообщения;
+- задержку автосохранения;
+- минимальную высоту поля;
+- необязательный селектор индикатора черновика.
 
-## Editing rule
+## Правила изменений
 
-Do not copy editor JavaScript back into individual Astro pages. Extend `createEditor.ts` when behaviour should be shared by both editors.
+Не копировать общую клиентскую логику обратно в Astro-страницы. Если поведение одинаково для редакторов, сначала расширять существующий модуль.
 
-Keep visual differences in `editor.css` under the relevant Book or Diary section.
+Различия композиции книги и дневника оставлять на уровне разметки страницы и соответствующего раздела `editor.css`.
+
+Любое изменение проверять командами:
+
+```bash
+npm test
+npm run build
+```
+
+Ручная проверка остаётся обязательной для автосохранения, диалогов, мобильной клавиатуры и визуального ритма страницы.
