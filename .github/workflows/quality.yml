@@ -1,0 +1,45 @@
+name: Проверка качества
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Тесты, сборка и аудит
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@v4
+
+      - name: Подготовить Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+
+      - name: Установить зависимости
+        run: npm ci
+
+      - name: Проверить уязвимости
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Выполнить тесты
+        run: npm test
+
+      - name: Проверить production-сборку
+        run: npm run build
