@@ -27,7 +27,6 @@ type LatestEntry =
       title: string;
       content: string;
       displayDate: string;
-      changedAt: string;
       href: string;
     }
   | {
@@ -36,7 +35,6 @@ type LatestEntry =
       title: string;
       content: string;
       displayDate: string;
-      changedAt: string;
       href: string;
     };
 
@@ -47,7 +45,6 @@ const latestEntryCandidates: LatestEntry[] = [
     title: line.title,
     content: line.content,
     displayDate: line.line_date,
-    changedAt: line.updated_at || line.created_at,
     href: `/lines/d-${line.id}`,
   })),
   ...diaryPages.map((page) => ({
@@ -56,21 +53,20 @@ const latestEntryCandidates: LatestEntry[] = [
     title: page.title,
     content: page.content,
     displayDate: page.entry_date,
-    changedAt: page.updated_at || page.created_at,
     href: `/pages/${page.id}`,
   })),
 ];
 
 const latestEntry = latestEntryCandidates.reduce<LatestEntry | null>(
   (latest, candidate) =>
-    !latest || toTimestamp(candidate.changedAt) > toTimestamp(latest.changedAt)
+    !latest || toTimestamp(candidate.displayDate) > toTimestamp(latest.displayDate)
       ? candidate
       : latest,
   null,
 );
 
 const latestUpdateLabel = latestEntry
-  ? formatLongDate(latestEntry.changedAt)
+  ? formatLongDate(latestEntry.displayDate)
   : "книга только начинается";
 
 const createExcerpt = (content: string, limit = 105) => {
