@@ -51,6 +51,11 @@ const errorMessage =
     </div>
 
     <div class="login__card paper-surface">
+      <a class="login__back" href="/">
+        <span aria-hidden="true">←</span>
+        Вернуться к книге
+      </a>
+
       <header class="login__header">
         <p class="login__eyebrow">Личная книга</p>
 
@@ -203,9 +208,35 @@ const errorMessage =
 
   .login__header,
   .login__form,
-  .login__note {
+  .login__note,
+  .login__back {
     position: relative;
     z-index: 1;
+  }
+
+  .login__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: var(--space-5);
+    color: var(--color-muted);
+    font-family: var(--font-heading);
+    font-size: var(--text-xs);
+    text-decoration: none;
+    transition:
+      color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .login__back:hover {
+    color: var(--color-ink);
+    transform: translateX(-3px);
+  }
+
+  .login__back:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 5px;
   }
 
   .login__header {
@@ -364,6 +395,16 @@ const errorMessage =
   @media (max-width: 30rem) {
     .login__card {
       border-radius: var(--radius-md);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .login__back {
+      transition: none;
+    }
+
+    .login__back:hover {
+      transform: none;
     }
   }
 </style>
