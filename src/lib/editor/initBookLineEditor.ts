@@ -1,13 +1,10 @@
-interface ApiResult {
-  ok?: boolean;
-  message?: string;
-}
-
-type AppWindow = Window & {
-  showAppDialog?: (options: Record<string, string>) => void;
-  showAppToast?: (options: Record<string, string>) => void;
-  setAppToastForNextPage?: (options: Record<string, string>) => void;
-};
+import {
+  clearEditorDraft,
+  handleExpiredEditorSession,
+  readEditorDraft,
+  readEditorResponse,
+  writeEditorDraft,
+} from "./editorRuntime";
 
 export function initBookLineEditor(): void {
   const root = document.querySelector<HTMLElement>("[data-book-line-editor]");
@@ -17,7 +14,6 @@ export function initBookLineEditor(): void {
   const readingUrl = root.dataset.readingUrl ?? "/lines";
   if (!Number.isInteger(id) || id <= 0) return;
 
-  const appWindow = window as AppWindow;
   const draftKey = `365-my-lines:edit-book-line-${id}`;
   const form = document.querySelector<HTMLFormElement>("#edit-form");
   const save = document.querySelector<HTMLButtonElement>("#save");
@@ -34,36 +30,19 @@ export function initBookLineEditor(): void {
   const confirmDelete = document.querySelector<HTMLButtonElement>("#confirm-delete");
   let saveTimer = 0;
 
-  const handleExpiredSession = (response: Response, result: ApiResult): boolean => {
-    if (response.status !== 401) return false;
-    if (message) message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
-    if (save) {
-      save.disabled = false;
-      save.textContent = "Сохранить изменения";
-    }
-    appWindow.showAppDialog?.({
-      eyebrow: "Доступ к редактору",
-      title: "Сессия завершилась",
-      message: result.message ?? "Для продолжения необходимо снова войти.",
-      actionLabel: "Войти",
-      actionHref: "/login",
-    });
-    return true;
-  };
-
   const updateCount = (): void => {
     if (count && content) count.textContent = String(content.value.length);
   };
 
   const saveDraft = (): void => {
     if (!title || !content || !number || !lineDate) return;
-    localStorage.setItem(draftKey, JSON.stringify({
+    const saved = writeEditorDraft(draftKey, {
       title: title.value,
       content: content.value,
       number: number.value,
       lineDate: lineDate.value,
-    }));
-    if (status) status.textContent = "Черновик сохранён";
+    });
+    if (status) status.textContent = saved ? "Черновик сохранён" : "Черновик недоступен";
   };
 
   const scheduleDraft = (): void => {
@@ -72,18 +51,15 @@ export function initBookLineEditor(): void {
     saveTimer = window.setTimeout(saveDraft, 500);
   };
 
-  try {
-    const stored = localStorage.getItem(draftKey);
-    if (stored && title && content && number && lineDate) {
-      const draft = JSON.parse(stored) as Partial<Record<"title" | "content" | "number" | "lineDate", string>>;
-      title.value = draft.title ?? title.value;
-      content.value = draft.content ?? content.value;
-      number.value = draft.number ?? number.value;
-      lineDate.value = draft.lineDate ?? lineDate.value;
-      if (status) status.textContent = "Несохранённый черновик восстановлен";
-    }
-  } catch {
-    localStorage.removeItem(draftKey);
+  const draft = readEditorDraft<
+    Partial<Record<"title" | "content" | "number" | "lineDate", string>>
+  >(draftKey);
+  if (draft && title && content && number && lineDate) {
+    title.value = draft.title ?? title.value;
+    content.value = draft.content ?? content.value;
+    number.value = draft.number ?? number.value;
+    lineDate.value = draft.lineDate ?? lineDate.value;
+    if (status) status.textContent = "Несохранённый черновик восстановлен";
   }
 
   [title, number, lineDate].forEach((element) => element?.addEventListener("input", scheduleDraft));
@@ -102,13 +78,23 @@ export function initBookLineEditor(): void {
 
     try {
       const response = await fetch(`/api/lines/${id}`, { method: "PUT", body: new FormData(form) });
-      const result = await response.json() as ApiResult;
-      if (handleExpiredSession(response, result)) return;
+      const result = await readEditorResponse(response);
+      if (
+        handleExpiredEditorSession({
+          response,
+          result,
+          messageElement: message,
+          onExpired: () => {
+            save.disabled = false;
+            save.textContent = "Сохранить изменения";
+          },
+        })
+      ) return;
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Не удалось сохранить.");
 
-      localStorage.removeItem(draftKey);
+      clearEditorDraft(draftKey);
       save.textContent = "Сохранено ✓";
-      appWindow.setAppToastForNextPage?.({ tone: "success", title: "Изменения сохранены", message: "Страница обновлена и опубликована." });
+      window.setAppToastForNextPage?.({ tone: "success", title: "Изменения сохранены", message: "Страница обновлена и опубликована." });
       document.body.classList.add("is-leaving");
       window.setTimeout(() => {
         const nextNumber = Number(number?.value);
@@ -117,7 +103,7 @@ export function initBookLineEditor(): void {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ошибка";
       if (message) message.textContent = errorMessage;
-      appWindow.showAppToast?.({ tone: "error", title: "Не удалось сохранить", message: errorMessage });
+      window.showAppToast?.({ tone: "error", title: "Не удалось сохранить", message: errorMessage });
       save.disabled = false;
       save.textContent = "Сохранить изменения";
     }
@@ -135,28 +121,26 @@ export function initBookLineEditor(): void {
 
     try {
       const response = await fetch(`/api/lines/${id}`, { method: "DELETE" });
-      const result = await response.json() as ApiResult;
-      if (response.status === 401) {
-        confirmDelete.disabled = false;
-        confirmDelete.textContent = "Удалить страницу";
-        dialog?.close();
-        appWindow.showAppDialog?.({
-          eyebrow: "Доступ к редактору",
-          title: "Сессия завершилась",
-          message: result.message ?? "Для продолжения необходимо снова войти.",
-          actionLabel: "Войти",
-          actionHref: "/login",
-        });
-        return;
-      }
+      const result = await readEditorResponse(response);
+      if (
+        handleExpiredEditorSession({
+          response,
+          result,
+          dialog,
+          onExpired: () => {
+            confirmDelete.disabled = false;
+            confirmDelete.textContent = "Удалить страницу";
+          },
+        })
+      ) return;
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Не удалось удалить строку.");
 
-      localStorage.removeItem(draftKey);
-      appWindow.setAppToastForNextPage?.({ tone: "success", title: "Страница удалена", message: "Она больше не отображается в книге." });
+      clearEditorDraft(draftKey);
+      window.setAppToastForNextPage?.({ tone: "success", title: "Страница удалена", message: "Она больше не отображается в книге." });
       location.href = "/lines";
     } catch (error) {
       const notFound = error instanceof Error && /не существует|не найдена|удалена/i.test(error.message);
-      appWindow.showAppDialog?.({
+      window.showAppDialog?.({
         eyebrow: notFound ? "Страница была удалена" : "Не удалось удалить",
         title: notFound ? "Страница больше не существует" : "Что-то пошло не так",
         message: error instanceof Error ? error.message : "Не удалось удалить строку.",

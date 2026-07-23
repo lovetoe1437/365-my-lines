@@ -4,10 +4,19 @@
  * Keeps draft restoration, autosave, character counting and submit handling
  * in one place so both writing screens behave consistently.
  */
+import {
+  clearEditorDraft,
+  handleExpiredEditorSession,
+  readEditorDraft,
+  readEditorResponse,
+  writeEditorDraft,
+} from "./editorRuntime";
+
 export type EditorConfig = {
   storageKey: string;
   endpoint: string;
   redirectTo: (id: string | number) => string;
+  statusSelector?: string;
   idleButtonLabel: string;
   savingButtonLabel?: string;
   savedButtonLabel?: string;
@@ -16,12 +25,6 @@ export type EditorConfig = {
   successDelay?: number;
   autosaveDelay?: number;
   minimumTextareaHeight?: number;
-};
-
-type SaveResponse = {
-  ok?: boolean;
-  id?: string | number;
-  message?: string;
 };
 
 const getElement = <T extends Element>(selector: string, type: { new (): T }): T | null => {
@@ -37,7 +40,9 @@ const chooseMessage = (messages?: readonly string[]): string | undefined => {
 export function initEditor(config: EditorConfig): void {
   const form = getElement("#entry-form", HTMLFormElement);
   const content = getElement("#content", HTMLTextAreaElement);
-  const status = document.querySelector<HTMLElement>("#draft-status");
+  const status = document.querySelector<HTMLElement>(
+    config.statusSelector ?? "#draft-status",
+  );
   const count = document.querySelector<HTMLElement>("#character-count");
   const message = document.querySelector<HTMLElement>("#form-message");
   const button = getElement("#save-button", HTMLButtonElement);
@@ -85,8 +90,11 @@ export function initEditor(config: EditorConfig): void {
 
   const saveDraft = (): void => {
     const data = Object.fromEntries(new FormData(form));
-    localStorage.setItem(config.storageKey, JSON.stringify(data));
-    setDraftStatus("Черновик сохранён", "saved");
+    const saved = writeEditorDraft(config.storageKey, data);
+    setDraftStatus(
+      saved ? "Черновик сохранён" : "Черновик недоступен",
+      saved ? "saved" : "idle",
+    );
   };
 
   const scheduleDraftSave = (): void => {
@@ -96,27 +104,21 @@ export function initEditor(config: EditorConfig): void {
   };
 
   const restoreDraft = (): boolean => {
-    try {
-      const rawDraft = localStorage.getItem(config.storageKey);
-      if (!rawDraft) return false;
+    const draft = readEditorDraft<Record<string, unknown>>(config.storageKey);
+    if (!draft) return false;
 
-      const draft = JSON.parse(rawDraft) as Record<string, unknown>;
-      for (const [name, value] of Object.entries(draft)) {
-        const field = form.elements.namedItem(name);
-        if (
-          (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) &&
-          typeof value === "string"
-        ) {
-          field.value = value;
-        }
+    for (const [name, value] of Object.entries(draft)) {
+      const field = form.elements.namedItem(name);
+      if (
+        (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) &&
+        typeof value === "string"
+      ) {
+        field.value = value;
       }
-
-      setDraftStatus("Черновик восстановлен", "restored");
-      return true;
-    } catch {
-      localStorage.removeItem(config.storageKey);
-      return false;
     }
+
+    setDraftStatus("Черновик восстановлен", "restored");
+    return true;
   };
 
   const prompt = chooseMessage(config.promptMessages);
@@ -149,30 +151,26 @@ export function initEditor(config: EditorConfig): void {
         method: "POST",
         body: new FormData(form),
       });
-      const result = (await response.json()) as SaveResponse;
+      const result = await readEditorResponse(response);
 
-      if (response.status === 401) {
-        if (message) {
-          message.dataset.tone = "error";
-          message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
-        }
-        setButtonState(isDirty ? "dirty" : "idle");
-        window.showAppDialog?.({
-          eyebrow: "Доступ к редактору",
-          title: "Сессия завершилась",
-          message: result.message ?? "Для продолжения необходимо снова войти.",
-          actionLabel: "Войти",
-          actionHref: "/login",
-        });
-        return;
-      }
+      if (
+        handleExpiredEditorSession({
+          response,
+          result,
+          messageElement: message,
+          onExpired: () => {
+            if (message) message.dataset.tone = "error";
+            setButtonState(isDirty ? "dirty" : "idle");
+          },
+        })
+      ) return;
 
       if (!response.ok || !result.ok || result.id === undefined) {
         throw new Error(result.message || "Не удалось сохранить запись.");
       }
 
       window.clearTimeout(autosaveTimer);
-      localStorage.removeItem(config.storageKey);
+      clearEditorDraft(config.storageKey);
       isDirty = false;
       setButtonState("saved");
 

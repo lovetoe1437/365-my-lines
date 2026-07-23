@@ -1,7 +1,10 @@
-interface ApiResult {
-  ok?: boolean;
-  message?: string;
-}
+import {
+  clearEditorDraft,
+  handleExpiredEditorSession,
+  readEditorDraft,
+  readEditorResponse,
+  writeEditorDraft,
+} from "./editorRuntime";
 
 export function initDiaryPageEditor(): void {
   const root = document.querySelector<HTMLElement>("[data-diary-page-editor]");
@@ -29,25 +32,6 @@ export function initDiaryPageEditor(): void {
     if (count && contentInput) count.textContent = String(contentInput.value.length);
   };
 
-  const handleExpiredSession = (response: Response, result: ApiResult): boolean => {
-    if (response.status !== 401) return false;
-
-    if (message) message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
-    if (saveButton) {
-      saveButton.disabled = false;
-      saveButton.textContent = "Сохранить изменения";
-    }
-
-    window.showAppDialog?.({
-      eyebrow: "Доступ к редактору",
-      title: "Сессия завершилась",
-      message: result.message ?? "Для продолжения необходимо снова войти.",
-      actionLabel: "Войти",
-      actionHref: "/login",
-    });
-    return true;
-  };
-
   const setDraftStatus = (
     text: string,
     state: "idle" | "saving" | "saved" | "restored",
@@ -60,15 +44,15 @@ export function initDiaryPageEditor(): void {
   const saveDraft = (): void => {
     if (!titleInput || !contentInput || !dateInput) return;
 
-    localStorage.setItem(
-      draftKey,
-      JSON.stringify({
-        title: titleInput.value,
-        content: contentInput.value,
-        entryDate: dateInput.value,
-      }),
+    const saved = writeEditorDraft(draftKey, {
+      title: titleInput.value,
+      content: contentInput.value,
+      entryDate: dateInput.value,
+    });
+    setDraftStatus(
+      saved ? "Черновик сохранён" : "Черновик недоступен",
+      saved ? "saved" : "idle",
     );
-    setDraftStatus("Черновик сохранён", "saved");
   };
 
   const scheduleDraft = (): void => {
@@ -77,26 +61,20 @@ export function initDiaryPageEditor(): void {
     saveTimer = window.setTimeout(saveDraft, 500);
   };
 
-  try {
-    const stored = localStorage.getItem(draftKey);
-    if (stored && titleInput && contentInput && dateInput) {
-      const draft = JSON.parse(stored) as Partial<
-        Record<"title" | "content" | "entryDate", string>
-      >;
-
-      if (
-        draft.title !== titleInput.value ||
-        draft.content !== contentInput.value ||
-        draft.entryDate !== dateInput.value
-      ) {
-        titleInput.value = draft.title ?? titleInput.value;
-        contentInput.value = draft.content ?? contentInput.value;
-        dateInput.value = draft.entryDate ?? dateInput.value;
-        setDraftStatus("Несохранённый черновик восстановлен", "restored");
-      }
+  const draft = readEditorDraft<
+    Partial<Record<"title" | "content" | "entryDate", string>>
+  >(draftKey);
+  if (draft && titleInput && contentInput && dateInput) {
+    if (
+      draft.title !== titleInput.value ||
+      draft.content !== contentInput.value ||
+      draft.entryDate !== dateInput.value
+    ) {
+      titleInput.value = draft.title ?? titleInput.value;
+      contentInput.value = draft.content ?? contentInput.value;
+      dateInput.value = draft.entryDate ?? dateInput.value;
+      setDraftStatus("Несохранённый черновик восстановлен", "restored");
     }
-  } catch {
-    localStorage.removeItem(draftKey);
   }
 
   titleInput?.addEventListener("input", scheduleDraft);
@@ -129,14 +107,24 @@ export function initDiaryPageEditor(): void {
         method: "PUT",
         body: data,
       });
-      const result = (await response.json()) as ApiResult;
+      const result = await readEditorResponse(response);
 
-      if (handleExpiredSession(response, result)) return;
+      if (
+        handleExpiredEditorSession({
+          response,
+          result,
+          messageElement: message,
+          onExpired: () => {
+            saveButton.disabled = false;
+            saveButton.textContent = "Сохранить изменения";
+          },
+        })
+      ) return;
       if (!response.ok || !result.ok) {
         throw new Error(result.message ?? "Не удалось сохранить изменения.");
       }
 
-      localStorage.removeItem(draftKey);
+      clearEditorDraft(draftKey);
       saveButton.textContent = "Сохранено ✓";
       setDraftStatus("Изменения сохранены", "saved");
       window.setAppToastForNextPage?.({
@@ -174,27 +162,25 @@ export function initDiaryPageEditor(): void {
 
     try {
       const response = await fetch(`/api/pages/${id}`, { method: "DELETE" });
-      const result = (await response.json()) as ApiResult;
+      const result = await readEditorResponse(response);
 
-      if (response.status === 401) {
-        confirmDelete.disabled = false;
-        confirmDelete.textContent = "Удалить запись";
-        dialog?.close();
-        window.showAppDialog?.({
-          eyebrow: "Доступ к редактору",
-          title: "Сессия завершилась",
-          message: result.message ?? "Для продолжения необходимо снова войти.",
-          actionLabel: "Войти",
-          actionHref: "/login",
-        });
-        return;
-      }
+      if (
+        handleExpiredEditorSession({
+          response,
+          result,
+          dialog,
+          onExpired: () => {
+            confirmDelete.disabled = false;
+            confirmDelete.textContent = "Удалить запись";
+          },
+        })
+      ) return;
 
       if (!response.ok || !result.ok) {
         throw new Error(result.message ?? "Не удалось удалить страницу.");
       }
 
-      localStorage.removeItem(draftKey);
+      clearEditorDraft(draftKey);
       window.setAppToastForNextPage?.({
         tone: "success",
         title: "Запись удалена",

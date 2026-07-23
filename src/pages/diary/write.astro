@@ -13,7 +13,7 @@ const isoToday = formatDateInputValue();
   <div class="diary-writing">
     <header class="diary-writing__toolbar">
       <a href="/book">← Вернуться в дневник</a>
-      <span class="draft-indicator" id="draft-status" data-state="idle">Черновик готов</span>
+      <span class="draft-indicator" id="draft-toolbar-status" data-state="idle">Черновик готов</span>
     </header>
 
     <form id="entry-form" class="diary-paper" novalidate>
@@ -52,6 +52,7 @@ const isoToday = formatDateInputValue();
     storageKey: "365-my-lines:new-diary-entry",
     endpoint: "/api/pages",
     redirectTo: (id) => `/pages/${id}`,
+    statusSelector: "#draft-toolbar-status",
     idleButtonLabel: "Сохранить запись",
     savedButtonLabel: "Запись сохранена",
     promptMessages: diaryWritingPrompts,
