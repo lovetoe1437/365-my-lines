@@ -34,11 +34,11 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
         </label>
       </header>
 
-      <input class="paper__title" id="title" name="title" value={page.title} maxlength="160" required />
+      <input class="paper__title" id="title" name="title" value={page.title} aria-label="Название записи" maxlength="160" required />
 
       <div class="paper__ornament" aria-hidden="true"><span></span><b>✦</b><span></span></div>
 
-      <textarea class="paper__content" id="content" name="content" required>{page.content}</textarea>
+      <textarea class="paper__content" id="content" name="content" aria-label="Текст записи" required>{page.content}</textarea>
 
       <footer class="paper__footer">
         <p class="draft-indicator" id="draft-status" data-state="idle">Черновик готов</p>

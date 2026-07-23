@@ -19,16 +19,16 @@ const { number, lineDate, title, content, readingUrl } = Astro.props;
       СТРОКА
       <input name="number" id="number" type="number" min="1" max="365" value={number} />
     </label>
-    <input name="lineDate" id="lineDate" type="date" value={lineDate} />
+    <input name="lineDate" id="lineDate" type="date" value={lineDate} aria-label="Дата страницы" />
   </header>
 
-  <input class="title" name="title" id="title" value={title} maxlength="160" required />
+  <input class="title" name="title" id="title" value={title} aria-label="Название страницы" maxlength="160" required />
 
   <div class="ornament" aria-hidden="true">
     <span></span><b>✦</b><span></span>
   </div>
 
-  <textarea name="content" id="content" required>{content}</textarea>
+  <textarea name="content" id="content" aria-label="Текст страницы" required>{content}</textarea>
 
   <EditorMeta class="paper-footer" statusText="Изменения сохраняются в черновик" />
   <p id="message" aria-live="polite"></p>

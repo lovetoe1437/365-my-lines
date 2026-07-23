@@ -14,7 +14,7 @@ const {
 } = Astro.props;
 ---
 
-<dialog id="delete-dialog" class="delete-dialog" aria-labelledby="delete-dialog-title">
+<dialog id="delete-dialog" class="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-message">
   <div class="delete-dialog__frame" aria-hidden="true"></div>
 
   <button
@@ -35,7 +35,7 @@ const {
       <span></span><span>✦</span><span></span>
     </div>
 
-    <p class="delete-dialog__text">{message}</p>
+    <p id="delete-dialog-message" class="delete-dialog__text">{message}</p>
 
     <div class="delete-dialog__actions">
       <button id="cancel-delete" class="cancel-button" type="button">

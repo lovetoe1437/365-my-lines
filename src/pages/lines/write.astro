@@ -30,13 +30,14 @@ const isoToday = formatDateInputValue();
           СТРОКА
           <input id="number" name="number" type="number" min="1" max="365" value={nextNumber} required />
         </label>
-        <input class="paper__date" id="lineDate" name="lineDate" type="date" value={isoToday} required />
+        <input class="paper__date" id="lineDate" name="lineDate" type="date" value={isoToday} aria-label="Дата страницы" required />
       </header>
 
       <input
         class="paper__title"
         id="title"
         name="title"
+        aria-label="Название страницы"
         placeholder="Название страницы"
         maxlength="160"
         required
@@ -48,6 +49,7 @@ const isoToday = formatDateInputValue();
         class="paper__content"
         id="content"
         name="content"
+        aria-label="Текст страницы"
         placeholder="Сегодня достаточно одной строки…"
         required
       ></textarea>
