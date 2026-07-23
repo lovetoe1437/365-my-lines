@@ -24,3 +24,15 @@ export const formatLongDate = (value: Date | string | number) => {
   const date = toDate(value);
   return Number.isNaN(date.getTime()) ? "" : longDateFormatter.format(date);
 };
+
+export const findLatestByDate = <T>(
+  entries: readonly T[],
+  getDate: (entry: T) => Date | string | number,
+) => entries.reduce<T | null>((latest, candidate) => {
+  const candidateTimestamp = toDate(getDate(candidate)).getTime();
+  if (Number.isNaN(candidateTimestamp)) return latest;
+  if (!latest) return candidate;
+
+  const latestTimestamp = toDate(getDate(latest)).getTime();
+  return candidateTimestamp > latestTimestamp ? candidate : latest;
+}, null);

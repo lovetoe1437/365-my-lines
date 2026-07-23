@@ -4,7 +4,7 @@ import BookOrnament from "../components/book/BookOrnament.astro";
 import { env } from "cloudflare:workers";
 import { getBookLines } from "../lib/db/book-lines";
 import { getPages } from "../lib/db/pages";
-import { formatLongDate } from "../lib/ui/date";
+import { findLatestByDate, formatLongDate } from "../lib/ui/date";
 
 export const prerender = false;
 
@@ -12,13 +12,6 @@ const [bookLines, diaryPages] = await Promise.all([
   getBookLines(env.DB),
   getPages(env.DB),
 ]);
-
-const toTimestamp = (value?: string) => {
-  if (!value) return 0;
-  const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
-  const timestamp = new Date(normalized).getTime();
-  return Number.isNaN(timestamp) ? 0 : timestamp;
-};
 
 type LatestEntry =
   | {
@@ -57,12 +50,9 @@ const latestEntryCandidates: LatestEntry[] = [
   })),
 ];
 
-const latestEntry = latestEntryCandidates.reduce<LatestEntry | null>(
-  (latest, candidate) =>
-    !latest || toTimestamp(candidate.displayDate) > toTimestamp(latest.displayDate)
-      ? candidate
-      : latest,
-  null,
+const latestEntry = findLatestByDate(
+  latestEntryCandidates,
+  (entry) => entry.displayDate,
 );
 
 const latestUpdateLabel = latestEntry
