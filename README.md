@@ -42,6 +42,14 @@ npm run build
 
 `npm test` запускает изолированные тесты критической логики редакторов. `npm run build` проверяет production-сборку для Cloudflare.
 
+Резервная копия удалённой D1 создаётся командой:
+
+```bash
+npm run backup:d1
+```
+
+Безопасный порядок публикации и восстановления описан в `docs/OPERATIONS.md`.
+
 ## Основные маршруты
 
 - `/` — обложка и вход в цифровую книгу;
@@ -84,4 +92,4 @@ npm run build
 npx wrangler d1 migrations apply 365-my-lines-db --remote
 ```
 
-Точные действия финального выпуска фиксируются в `docs/ROADMAP.md`.
+Roadmap выпуска зафиксирован в `docs/ROADMAP.md`, а текущий порядок эксплуатации — в `docs/OPERATIONS.md`.
