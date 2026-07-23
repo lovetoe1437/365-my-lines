@@ -21,7 +21,7 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
 ---
 
 <AppLayout title={`Редактирование — ${page.title}`} class="diary-editor-page">
-  <div class="editor-shell">
+  <div class="editor-shell" data-diary-page-editor data-page-id={id}>
     <a class="editor-back" href={`/pages/${page.id}`}>← Вернуться к странице</a>
 
     <form class="paper" id="edit-form" novalidate>
@@ -63,150 +63,9 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
   />
 </AppLayout>
 
-<script define:vars={{ id }}>
-  const DRAFT_KEY = `365-my-lines:edit-diary-page-${id}`;
-  const form = document.getElementById("edit-form");
-  const titleInput = document.getElementById("title");
-  const contentInput = document.getElementById("content");
-  const dateInput = document.getElementById("entryDate");
-  const saveButton = document.getElementById("save-button");
-  const message = document.getElementById("form-message");
-  const status = document.getElementById("draft-status");
-  const count = document.getElementById("character-count");
-  const dialog = document.getElementById("delete-dialog");
-  const openDelete = document.getElementById("open-delete-dialog");
-  const cancelDelete = document.getElementById("cancel-delete");
-  const confirmDelete = document.getElementById("confirm-delete");
-  let saveTimer;
-
-  const updateCount = () => {
-    if (count && contentInput instanceof HTMLTextAreaElement) count.textContent = String(contentInput.value.length);
-  };
-
-  const redirectAfterExpiredSession = (response, result) => {
-    if (response.status !== 401) return false;
-    if (message) message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
-    if (saveButton instanceof HTMLButtonElement) {
-      saveButton.disabled = false;
-      saveButton.textContent = "Сохранить изменения";
-    }
-    window.showAppDialog?.({
-      eyebrow: "Доступ к редактору",
-      title: "Сессия завершилась",
-      message: result.message ?? "Для продолжения необходимо снова войти.",
-      actionLabel: "Войти",
-      actionHref: "/login",
-    });
-    return true;
-  };
-
-  const setDraftStatus = (text, state) => {
-    if (!status) return;
-    status.textContent = text;
-    status.dataset.state = state;
-  };
-
-  const saveDraft = () => {
-    if (!(titleInput instanceof HTMLInputElement) || !(contentInput instanceof HTMLTextAreaElement) || !(dateInput instanceof HTMLInputElement)) return;
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ title: titleInput.value, content: contentInput.value, entryDate: dateInput.value }));
-    setDraftStatus("Черновик сохранён", "saved");
-  };
-
-  const scheduleDraft = () => {
-    setDraftStatus("Сохраняем черновик…", "saving");
-    window.clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(saveDraft, 500);
-  };
-
-  try {
-    const stored = localStorage.getItem(DRAFT_KEY);
-    if (stored && titleInput instanceof HTMLInputElement && contentInput instanceof HTMLTextAreaElement && dateInput instanceof HTMLInputElement) {
-      const draft = JSON.parse(stored);
-      if (draft.title !== titleInput.value || draft.content !== contentInput.value || draft.entryDate !== dateInput.value) {
-        titleInput.value = draft.title ?? titleInput.value;
-        contentInput.value = draft.content ?? contentInput.value;
-        dateInput.value = draft.entryDate ?? dateInput.value;
-        setDraftStatus("Несохранённый черновик восстановлен", "restored");
-      }
-    }
-  } catch { localStorage.removeItem(DRAFT_KEY); }
-
-  titleInput?.addEventListener("input", scheduleDraft);
-  dateInput?.addEventListener("input", scheduleDraft);
-  contentInput?.addEventListener("input", () => { updateCount(); scheduleDraft(); });
-  updateCount();
-
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!(titleInput instanceof HTMLInputElement) || !(contentInput instanceof HTMLTextAreaElement) || !(dateInput instanceof HTMLInputElement) || !(saveButton instanceof HTMLButtonElement)) return;
-
-    if (!titleInput.value.trim() || !contentInput.value.trim() || !dateInput.value) {
-      if (message) message.textContent = "Дата, название и текст страницы не могут быть пустыми.";
-      return;
-    }
-
-    saveButton.disabled = true;
-    saveButton.textContent = "Сохраняем…";
-
-    try {
-      const data = new FormData();
-      data.set("title", titleInput.value);
-      data.set("content", contentInput.value);
-      data.set("entryDate", dateInput.value);
-      const response = await fetch(`/api/pages/${id}`, { method: "PUT", body: data });
-      const result = await response.json();
-      if (redirectAfterExpiredSession(response, result)) return;
-      if (!response.ok || !result.ok) throw new Error(result.message ?? "Не удалось сохранить изменения.");
-      localStorage.removeItem(DRAFT_KEY);
-      saveButton.textContent = "Сохранено ✓";
-      setDraftStatus("Изменения сохранены", "saved");
-      window.setAppToastForNextPage?.({ tone: "success", title: "Изменения сохранены", message: "Запись обновлена и опубликована." });
-      document.body.classList.add("is-leaving");
-      window.setTimeout(() => { window.location.href = `/pages/${id}`; }, 400);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Не удалось сохранить изменения.";
-      if (message) message.textContent = errorMessage;
-      window.showAppToast?.({ tone: "error", title: "Не удалось сохранить", message: errorMessage });
-      saveButton.disabled = false;
-      saveButton.textContent = "Сохранить изменения";
-    }
-  });
-
-  openDelete?.addEventListener("click", () => dialog instanceof HTMLDialogElement && dialog.showModal());
-  cancelDelete?.addEventListener("click", () => dialog instanceof HTMLDialogElement && dialog.close());
-  dialog?.addEventListener("click", (event) => { if (event.target === dialog && dialog instanceof HTMLDialogElement) dialog.close(); });
-
-  confirmDelete?.addEventListener("click", async () => {
-    if (!(confirmDelete instanceof HTMLButtonElement)) return;
-    confirmDelete.disabled = true;
-    confirmDelete.textContent = "Удаляем…";
-    try {
-      const response = await fetch(`/api/pages/${id}`, { method: "DELETE" });
-      const result = await response.json();
-      if (response.status === 401) {
-        confirmDelete.disabled = false;
-        confirmDelete.textContent = "Удалить запись";
-        if (dialog instanceof HTMLDialogElement) dialog.close();
-        window.showAppDialog?.({ eyebrow: "Доступ к редактору", title: "Сессия завершилась", message: result.message ?? "Для продолжения необходимо снова войти.", actionLabel: "Войти", actionHref: "/login" });
-        return;
-      }
-      if (!response.ok || !result.ok) throw new Error(result.message ?? "Не удалось удалить страницу.");
-      localStorage.removeItem(DRAFT_KEY);
-      window.setAppToastForNextPage?.({ tone: "success", title: "Запись удалена", message: "Она больше не отображается в дневнике." });
-      window.location.href = "/book";
-    } catch (error) {
-      const notFound = error instanceof Error && /не существует|не найдена|удалена/i.test(error.message);
-      window.showAppDialog?.({
-        eyebrow: notFound ? "Запись была удалена" : "Не удалось удалить",
-        title: notFound ? "Запись больше не существует" : "Что-то пошло не так",
-        message: error instanceof Error ? error.message : "Не удалось удалить страницу.",
-        actionLabel: notFound ? "Вернуться в дневник" : "Закрыть",
-        actionHref: notFound ? "/book" : "",
-      });
-      confirmDelete.disabled = false;
-      confirmDelete.textContent = "Удалить запись";
-    }
-  });
+<script>
+  import { initDiaryPageEditor } from "../../../lib/editor/initDiaryPageEditor";
+  initDiaryPageEditor();
 </script>
 
 <style>
