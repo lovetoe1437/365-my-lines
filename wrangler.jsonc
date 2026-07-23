@@ -19,5 +19,11 @@
       "database_name": "365-my-lines-db",
       "database_id": "93ed3d7e-85c1-420a-ac84-52938e4f7c3c"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES_BUCKET",
+      "bucket_name": "365-my-lines-images"
+    }
   ]
 }
