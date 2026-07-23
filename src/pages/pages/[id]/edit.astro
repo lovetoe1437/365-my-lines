@@ -86,6 +86,10 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
   const redirectAfterExpiredSession = (response, result) => {
     if (response.status !== 401) return false;
     if (message) message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
+    if (saveButton instanceof HTMLButtonElement) {
+      saveButton.disabled = false;
+      saveButton.textContent = "Сохранить изменения";
+    }
     window.showAppDialog?.({
       eyebrow: "Доступ к редактору",
       title: "Сессия завершилась",
@@ -180,6 +184,9 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
       const response = await fetch(`/api/pages/${id}`, { method: "DELETE" });
       const result = await response.json();
       if (response.status === 401) {
+        confirmDelete.disabled = false;
+        confirmDelete.textContent = "Удалить запись";
+        if (dialog instanceof HTMLDialogElement) dialog.close();
         window.showAppDialog?.({ eyebrow: "Доступ к редактору", title: "Сессия завершилась", message: result.message ?? "Для продолжения необходимо снова войти.", actionLabel: "Войти", actionHref: "/login" });
         return;
       }

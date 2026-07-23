@@ -37,6 +37,10 @@ export function initBookLineEditor(): void {
   const handleExpiredSession = (response: Response, result: ApiResult): boolean => {
     if (response.status !== 401) return false;
     if (message) message.textContent = result.message ?? "Сессия завершилась. Войдите снова.";
+    if (save) {
+      save.disabled = false;
+      save.textContent = "Сохранить изменения";
+    }
     appWindow.showAppDialog?.({
       eyebrow: "Доступ к редактору",
       title: "Сессия завершилась",
@@ -133,6 +137,9 @@ export function initBookLineEditor(): void {
       const response = await fetch(`/api/lines/${id}`, { method: "DELETE" });
       const result = await response.json() as ApiResult;
       if (response.status === 401) {
+        confirmDelete.disabled = false;
+        confirmDelete.textContent = "Удалить страницу";
+        dialog?.close();
         appWindow.showAppDialog?.({
           eyebrow: "Доступ к редактору",
           title: "Сессия завершилась",
