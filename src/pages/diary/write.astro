@@ -3,9 +3,10 @@ import AppLayout from "../../layouts/AppLayout.astro";
 import EditorActions from "../../components/editor/EditorActions.astro";
 import EditorMeta from "../../components/editor/EditorMeta.astro";
 import BookOrnament from "../../components/book/BookOrnament.astro";
+import { formatDateInputValue } from "../../lib/ui/date";
 import "../../styles/editor.css";
 
-const isoToday = new Date().toISOString().slice(0, 10);
+const isoToday = formatDateInputValue();
 ---
 
 <AppLayout title="Новая запись" class="diary-editor-page">
@@ -23,7 +24,7 @@ const isoToday = new Date().toISOString().slice(0, 10);
           <span>Дата записи</span>
           <input class="diary-paper__date" id="entryDate" name="entryDate" type="date" value={isoToday} required />
         </label>
-        <input id="title" name="title" aria-label="Заголовок записи" placeholder="Название этой страницы" maxlength="160" required />
+        <input id="title" name="title" aria-label="Заголовок записи" placeholder="Название записи" maxlength="160" required />
         <div class="diary-paper__divider" aria-hidden="true"><span></span><b>✦</b><span></span></div>
       </div>
 
@@ -42,6 +43,11 @@ const isoToday = new Date().toISOString().slice(0, 10);
 <script>
   import { initEditor } from "../../lib/editor/createEditor";
   import { diarySavedMessages, diaryWritingPrompts } from "../../lib/editor/messages";
+  import { formatDateInputValue } from "../../lib/ui/date";
+
+  const dateInput = document.querySelector<HTMLInputElement>("#entryDate");
+  if (dateInput) dateInput.value = formatDateInputValue();
+
   initEditor({
     storageKey: "365-my-lines:new-diary-entry",
     endpoint: "/api/pages",
