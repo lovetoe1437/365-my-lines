@@ -12,7 +12,7 @@
     "astro": "astro",
     "generate-types": "wrangler types",
     "backup:d1": "node scripts/backup-d1.mjs",
-    "test": "node --experimental-strip-types --test tests/date.test.mjs tests/editorRuntime.test.mjs tests/imageMetadata.test.mjs tests/navigation.test.mjs tests/session.test.mjs"
+    "test": "node --experimental-strip-types --test tests/date.test.mjs tests/editorRuntime.test.mjs tests/imageMetadata.test.mjs tests/imageStorage.test.mjs tests/navigation.test.mjs tests/session.test.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.3",
