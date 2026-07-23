@@ -2,8 +2,8 @@
 
 const SESSION_KEY = "admin";
 
-export function createAdminSession(context: APIContext): void {
-  context.session?.regenerate();
+export async function createAdminSession(context: APIContext): Promise<void> {
+  await context.session?.regenerate();
   context.session?.set(SESSION_KEY, true);
 }
 

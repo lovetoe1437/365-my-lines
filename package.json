@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "generate-types": "wrangler types",
-    "test": "node --experimental-strip-types --test tests/editorRuntime.test.mjs"
+    "test": "node --experimental-strip-types --test tests/editorRuntime.test.mjs tests/session.test.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.3",

@@ -30,7 +30,7 @@ export const POST: APIRoute = async (context) => {
     return context.redirect("/login?error=wrong-password", 303);
   }
 
-  createAdminSession(context);
+  await createAdminSession(context);
 
   return context.redirect("/book", 303);
 };
