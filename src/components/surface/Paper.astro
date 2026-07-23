@@ -1,0 +1,23 @@
+---
+interface Props {
+  as?: "div" | "section" | "article" | "main";
+  tone?: "light" | "warm" | "reading";
+  elevation?: "none" | "sm" | "md" | "lg";
+  padding?: "none" | "sm" | "md" | "lg" | "xl";
+  radius?: "none" | "sm" | "md" | "lg";
+  class?: string;
+}
+
+const {
+  as: Tag = "div",
+  tone = "light",
+  elevation = "md",
+  padding = "lg",
+  radius = "lg",
+  class: className = "",
+} = Astro.props;
+---
+
+<Tag class:list={["ds-paper", `ds-paper--${tone}`, `ds-paper--elevation-${elevation}`, `ds-paper--padding-${padding}`, `ds-paper--radius-${radius}`, className]}>
+  <slot />
+</Tag>

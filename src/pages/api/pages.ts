@@ -10,12 +10,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     const title = String(formData.get("title") ?? "").trim();
     const content = String(formData.get("content") ?? "").trim();
+    const entryDate = String(formData.get("entryDate") ?? "").trim();
 
-    if (!title || !content) {
+    if (!title || !content || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)) {
       return Response.json(
         {
           ok: false,
-          message: "Заполни название и текст записи.",
+          message: "Заполни дату, название и текст записи.",
         },
         { status: 400 },
       );
@@ -24,6 +25,7 @@ export const POST: APIRoute = async ({ request }) => {
     const id = await createPage(env.DB, {
       title,
       content,
+      entryDate,
     });
 
     return Response.json(

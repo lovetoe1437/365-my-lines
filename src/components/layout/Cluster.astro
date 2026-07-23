@@ -1,0 +1,23 @@
+---
+interface Props {
+  as?: "div" | "nav" | "header" | "footer" | "ul";
+  gap?: "xs" | "sm" | "md" | "lg";
+  justify?: "start" | "center" | "between" | "end";
+  align?: "start" | "center" | "end";
+  wrap?: boolean;
+  class?: string;
+}
+
+const {
+  as: Tag = "div",
+  gap = "md",
+  justify = "start",
+  align = "center",
+  wrap = true,
+  class: className = "",
+} = Astro.props;
+---
+
+<Tag class:list={["ds-cluster", `ds-cluster--${gap}`, `ds-cluster--justify-${justify}`, `ds-cluster--align-${align}`, { "ds-cluster--nowrap": !wrap }, className]}>
+  <slot />
+</Tag>

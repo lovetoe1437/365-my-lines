@@ -1,205 +1,268 @@
 ---
-const completedLines = 0;
-const totalLines = 365;
+import AppLayout from "../layouts/AppLayout.astro";
+import BookOrnament from "../components/book/BookOrnament.astro";
+import { env } from "cloudflare:workers";
+import { getBookLines } from "../lib/db/book-lines";
+import { getPages } from "../lib/db/pages";
+import { formatLongDate } from "../lib/ui/date";
+
+export const prerender = false;
+
+const [bookLines, diaryPages] = await Promise.all([
+  getBookLines(env.DB),
+  getPages(env.DB),
+]);
+
+const toTimestamp = (value?: string) => {
+  if (!value) return 0;
+  const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
+  const timestamp = new Date(normalized).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+};
+
+type LatestEntry =
+  | {
+      type: "book";
+      id: number;
+      title: string;
+      content: string;
+      displayDate: string;
+      changedAt: string;
+      href: string;
+    }
+  | {
+      type: "diary";
+      id: number;
+      title: string;
+      content: string;
+      displayDate: string;
+      changedAt: string;
+      href: string;
+    };
+
+const latestEntryCandidates: LatestEntry[] = [
+  ...bookLines.map((line) => ({
+    type: "book" as const,
+    id: line.id,
+    title: line.title,
+    content: line.content,
+    displayDate: line.line_date,
+    changedAt: line.updated_at || line.created_at,
+    href: `/lines/d-${line.id}`,
+  })),
+  ...diaryPages.map((page) => ({
+    type: "diary" as const,
+    id: page.id,
+    title: page.title,
+    content: page.content,
+    displayDate: page.entry_date,
+    changedAt: page.updated_at || page.created_at,
+    href: `/pages/${page.id}`,
+  })),
+];
+
+const latestEntry = latestEntryCandidates.reduce<LatestEntry | null>(
+  (latest, candidate) =>
+    !latest || toTimestamp(candidate.changedAt) > toTimestamp(latest.changedAt)
+      ? candidate
+      : latest,
+  null,
+);
+
+const latestUpdateLabel = latestEntry
+  ? formatLongDate(latestEntry.changedAt)
+  : "книга только начинается";
+
+const createExcerpt = (content: string, limit = 105) => {
+  const normalized = content.replace(/\s+/g, " ").trim();
+  return normalized.length <= limit
+    ? normalized
+    : `${normalized.slice(0, limit).trim()}…`;
+};
+
+const diaryCountLabel = (count: number) => {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return `${count} записей`;
+  if (last === 1) return `${count} запись`;
+  if (last >= 2 && last <= 4) return `${count} записи`;
+  return `${count} записей`;
+};
 ---
 
-<!doctype html>
-<html lang="ru">
-	<head>
-		<meta charset="UTF-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1"
-		/>
-		<meta
-			name="description"
-			content="365 моих строк — один день, одна мысль."
-		/>
+<AppLayout
+  title="365 моих строк"
+  description="Личная цифровая книга — некоторые страницы невозможно написать вовремя."
+  class="home-page"
+>
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-hero__glow" aria-hidden="true"></div>
 
-		<title>365 моих строк</title>
+    <div class="home-hero__copy">
+      <p class="home-hero__eyebrow">Личная цифровая книга</p>
+      <h1 id="home-title"><span class="home-title__number">365</span> <span class="home-title__words">моих строк</span></h1>
+      <p class="home-hero__lead">
+        <span>Некоторые страницы невозможно написать вовремя.</span>
+        <span>Поэтому эта книга продолжается здесь.</span>
+      </p>
+      <p class="home-hero__extra">
+        Здесь появляются новые мысли, новые страницы<br />
+        и то, что невозможно сказать вслух.
+      </p>
 
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Literata:opsz,wght@7..72,300;400&display=swap"
-			rel="stylesheet"
-		/>
-	</head>
+    </div>
 
-	<body>
-		<main class="cover">
-			<div class="cover__content">
-				<p class="cover__number">
-					{completedLines} / {totalLines}
-				</p>
+    <div class="home-hero__controls">
+      <div class="home-hero__actions">
+        <a class="home-button home-button--primary" href="/lines">
+          <span>Открыть книгу</span><span aria-hidden="true">→</span>
+        </a>
+        <a class="home-button home-button--secondary" href="/book">
+          <span>Открыть дневник</span><span aria-hidden="true">→</span>
+        </a>
+      </div>
 
-				<h1>365 моих строк</h1>
+      <p class="home-hero__updated">
+        <span aria-hidden="true">◷</span>
+        Последнее обновление <i aria-hidden="true">•</i> {latestUpdateLabel}
+      </p>
+    </div>
 
-				<p class="cover__subtitle">
-					Один день. Одна мысль.
-				</p>
+    <a class="home-book" href="/lines" aria-label="Открыть книгу 365 моих строк">
+      <span class="home-book__pages" aria-hidden="true"></span>
+      <span class="home-book__cover">
+        <span class="home-book__star" aria-hidden="true">✦</span>
+        <strong>365</strong>
+        <em>моих строк</em>
+        <small>один день · одна мысль</small>
+      </span>
+      <span class="home-book__ribbon" aria-hidden="true"></span>
+    </a>
 
-				<a class="cover__button" href="/lines">
-					Открыть строки
-					<span aria-hidden="true">→</span>
-				</a>
-			</div>
+    <img class="home-hero__flowers" src="/botanical-branch.svg" alt="" aria-hidden="true" />
+    <img class="home-hero__flowers home-hero__flowers--ghost" src="/botanical-branch.svg" alt="" aria-hidden="true" />
+  </section>
 
-			<p class="cover__footer">
-				Некоторые слова приходят не сразу.
-			</p>
-		</main>
-	</body>
-</html>
+  <section class="home-content" aria-label="Продолжение книги">
+    <BookOrnament />
+
+    <div class="home-latest">
+      <p class="home-section-label">Последняя запись <span aria-hidden="true">✎</span></p>
+
+      {latestEntry ? (
+        <a class="latest-entry" href={latestEntry.href}>
+          <time class="latest-entry__date" datetime={latestEntry.displayDate}>
+            <strong>{new Date(`${latestEntry.displayDate}T00:00:00`).getDate()}</strong>
+            <span>{new Intl.DateTimeFormat("ru-RU", { month: "long" }).format(new Date(`${latestEntry.displayDate}T00:00:00`))}</span>
+            <small>{new Date(`${latestEntry.displayDate}T00:00:00`).getFullYear()}</small>
+          </time>
+          <span class="latest-entry__copy">
+            <strong>{latestEntry.title}</strong>
+            <span>{createExcerpt(latestEntry.content)}</span>
+          </span>
+          <span class="latest-entry__link">
+            {latestEntry.type === "book" ? "Читать страницу" : "Читать запись"}
+            <b aria-hidden="true">→</b>
+          </span>
+        </a>
+      ) : (
+        <a class="latest-entry latest-entry--empty" href="/diary/write">
+          <span class="latest-entry__copy">
+            <strong>Первая запись ещё впереди</strong>
+            <span>Иногда началом становится всего одна честная мысль.</span>
+          </span>
+          <span class="latest-entry__link">Написать <b aria-hidden="true">→</b></span>
+        </a>
+      )}
+    </div>
+
+    <div class="home-destinations">
+      <a class="destination-card" href="/lines">
+        <span class="destination-card__icon" aria-hidden="true">▤</span>
+        <span class="destination-card__copy">
+          <strong>Книга</strong>
+          <span>{bookLines.length} из 365 страниц</span>
+          <small>История, которая уже написана.<br />То, что навсегда останется здесь.</small>
+        </span>
+        <span class="destination-card__link">Перейти <b aria-hidden="true">→</b></span>
+      </a>
+
+      <a class="destination-card" href="/book">
+        <span class="destination-card__icon destination-card__icon--quill" aria-hidden="true">⌁</span>
+        <span class="destination-card__copy">
+          <strong>Дневник</strong>
+          <span>{diaryCountLabel(diaryPages.length)}</span>
+          <small>Мысли, которые продолжают появляться.<br />Живой дневник наших дней.</small>
+        </span>
+        <span class="destination-card__link">Перейти <b aria-hidden="true">→</b></span>
+      </a>
+    </div>
+
+    <footer class="home-footer">
+      <BookOrnament />
+      <p>© Всё, что не смог сказать вслух.</p>
+    </footer>
+  </section>
+
+  <nav class="home-mobile-tabs" aria-label="Быстрая навигация">
+    <a href="/lines"><span aria-hidden="true">▤</span><small>Книга</small></a>
+    <a href="/book"><span aria-hidden="true">⌁</span><small>Дневник</small></a>
+  </nav>
+</AppLayout>
 
 <style>
-	:global(*) {
-		box-sizing: border-box;
-	}
+  :global(body.home-page){overflow-x:hidden;background:radial-gradient(circle at 24% 4%,rgba(255,255,255,.93),transparent 35rem),radial-gradient(circle at 91% 22%,rgba(137,101,70,.13),transparent 30rem),linear-gradient(130deg,#fbf7ef 0%,#f4ecdf 57%,#e5d6c2 100%)}
+  .home-hero{position:relative;display:grid;grid-template-columns:minmax(0,1.02fr) minmax(340px,.98fr);grid-template-rows:auto auto;align-items:end;gap:clamp(2.5rem,5vw,5.5rem);width:min(calc(100% - 3rem),1240px);min-height:clamp(640px,calc(100svh - 68px),760px);margin:0 auto;padding:clamp(3.8rem,6vw,5.6rem) 0 3.2rem;border-bottom:1px solid var(--line);overflow:visible}
+  .home-hero__glow{position:absolute;inset:-15% 42% 0 -22%;background:radial-gradient(ellipse,rgba(255,255,255,.9),rgba(255,250,242,.26) 48%,transparent 72%);pointer-events:none}
+  .home-hero__copy{position:relative;z-index:3;grid-column:1;grid-row:1;align-self:end;animation:reveal 780ms ease both}.home-hero__controls{position:relative;z-index:3;grid-column:1;grid-row:2;align-self:start;animation:reveal 780ms 80ms ease both}
+  .home-hero__eyebrow,.home-section-label{margin:0;color:var(--accent);font-size:.67rem;letter-spacing:.24em;text-transform:uppercase}
+  .home-hero h1{max-width:11ch;margin:1.2rem 0 0;font-size:clamp(4.4rem,7vw,6.6rem);font-weight:500;line-height:.82;letter-spacing:-.055em}
+  .home-hero__lead{display:grid;gap:.05rem;margin:2rem 0 0;color:#5d5147;font-family:var(--font-heading);font-size:clamp(1.18rem,2.1vw,1.5rem);line-height:1.48}
+  .home-hero__extra{margin:.35rem 0 0;color:var(--muted);font-size:.92rem;line-height:1.72}
+  .home-hero__actions{display:flex;gap:1rem;margin-top:2.4rem}
+  .home-button{display:inline-flex;align-items:center;justify-content:space-between;gap:2rem;min-width:182px;padding:1rem 1.25rem;border:1px solid var(--accent);font-size:.88rem;transition:transform var(--transition-normal),background var(--transition-fast),color var(--transition-fast),box-shadow var(--transition-normal)}
+  .home-button--primary{background:linear-gradient(135deg,#947153,#76573f);color:#fff9ef;box-shadow:0 14px 30px rgba(67,45,29,.16)}
+  .home-button--secondary{background:rgba(255,252,246,.42);color:var(--ink)}
+  .home-button:hover{transform:translateY(-2px);box-shadow:0 18px 32px rgba(67,45,29,.16)}
+  .home-button--secondary:hover{background:rgba(255,252,246,.82)}
+  .home-hero__updated{display:flex;align-items:center;gap:.55rem;margin:2.6rem 0 0;color:var(--muted);font-family:var(--font-heading);font-size:.85rem;line-height:1.3}
+  .home-hero__updated i{font-style:normal;color:var(--accent)}
+  .home-book{position:relative;z-index:2;grid-column:2;grid-row:1 / 3;align-self:center;justify-self:center;width:min(31vw,365px);aspect-ratio:.715;filter:drop-shadow(0 28px 34px rgba(52,36,24,.17)) drop-shadow(-8px 10px 16px rgba(80,56,38,.055));transform:translate(1.3rem,-5px);animation:reveal 850ms 120ms ease both,floatBook 9s 1.1s ease-in-out infinite}
+  .home-book__pages{position:absolute;inset:2.3% -3% -2.5% 3.2%;border-radius:2px 8px 8px 2px;background:repeating-linear-gradient(90deg,#d9cbb8 0 1px,#f8f1e7 1px 3px);transform:skewY(-1deg)}
+  .home-book__cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 34%),repeating-linear-gradient(92deg,rgba(255,255,255,.026) 0 1px,transparent 1px 4px),linear-gradient(145deg,#725b48,#523e30 64%,#403026);color:#f5ebde;box-shadow:inset 0 0 0 9px rgba(255,255,255,.025),inset 0 0 0 10px rgba(0,0,0,.14);text-align:center;transition:filter var(--transition-normal),transform var(--transition-slow)}
+  .home-book__cover::before{position:absolute;inset:6%;border:1px solid rgba(230,210,187,.42);content:""}
+  .home-book__star{position:absolute;top:16%;color:#d8bea0;font-size:.7rem}
+  .home-book strong{font-family:var(--font-heading);font-size:clamp(5rem,9vw,7.6rem);font-weight:500;line-height:.72}
+  .home-book em{margin-top:1rem;font-family:var(--font-heading);font-size:clamp(1.35rem,2.8vw,1.9rem);font-style:normal;letter-spacing:.09em}
+  .home-book small{position:absolute;bottom:13%;color:#d9c7b2;font-size:.55rem;letter-spacing:.24em;text-transform:uppercase}
+  .home-book__ribbon{position:absolute;right:15%;bottom:-6%;width:17px;height:22%;background:#964438;clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)}
+  .home-book:hover .home-book__cover{filter:brightness(1.045);transform:rotateY(-1.2deg) translateX(-2px)}
+  .home-hero__flowers{position:absolute;right:-.6rem;bottom:1.15rem;z-index:4;width:clamp(175px,17vw,235px);height:auto;opacity:.88;filter:sepia(.04) saturate(.94) drop-shadow(0 8px 12px rgba(95,68,43,.05));pointer-events:none;transform:rotate(-4deg);transform-origin:bottom center}
+  .home-hero__flowers--ghost{right:auto;left:39%;bottom:.2rem;z-index:1;width:98px;opacity:.12;filter:none;transform:scaleX(-1) rotate(8deg)}
+  .home-content{width:min(calc(100% - 3rem),1240px);margin:0 auto;padding:2.2rem 0 2.4rem}
+  .home-content>:global(.book-ornament){display:none}
+  .home-latest{max-width:800px;margin:0 auto}
+  .home-section-label{margin-bottom:.8rem;color:#685749}
+  .latest-entry{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:center;min-height:112px;border:1px solid var(--line);background:rgba(255,252,246,.32);transition:transform var(--transition-normal),background var(--transition-fast),box-shadow var(--transition-normal)}
+  .latest-entry:hover{transform:translateY(-2px);background:rgba(255,252,246,.68);box-shadow:0 15px 30px rgba(67,45,29,.07)}
+  .latest-entry__date{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--line);font-family:var(--font-heading);text-align:center;text-transform:lowercase}
+  .latest-entry__date strong{font-size:2.4rem;font-weight:500;line-height:.8}.latest-entry__date span{margin-top:.55rem;font-size:.63rem;letter-spacing:.08em}.latest-entry__date small{margin-top:.25rem;color:var(--muted);font-size:.68rem}
+  .latest-entry__copy{display:grid;gap:.35rem;padding:1.25rem 1.4rem}.latest-entry__copy>strong{font-family:var(--font-heading);font-size:1.35rem;font-weight:500}.latest-entry__copy>span{color:var(--muted);font-size:.84rem;line-height:1.6}
+  .latest-entry__link,.destination-card__link{display:flex;align-items:center;gap:.75rem;padding:1.25rem;color:#5c4a3c;font-family:var(--font-heading);font-size:.83rem;white-space:nowrap}.latest-entry__link b,.destination-card__link b{font-weight:400;transition:transform var(--transition-fast)}.latest-entry:hover b,.destination-card:hover b{transform:translateX(4px)}
+  .latest-entry--empty{grid-template-columns:minmax(0,1fr) auto}.latest-entry--empty .latest-entry__copy{padding-left:1.6rem}
+  .home-destinations{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.2rem}
+  .destination-card{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;min-height:145px;padding:1.2rem;border:1px solid var(--line);background:rgba(255,252,246,.25);transition:transform var(--transition-normal),background var(--transition-fast),box-shadow var(--transition-normal)}
+  .destination-card:hover{transform:translateY(-2px);background:rgba(255,252,246,.62);box-shadow:0 15px 30px rgba(67,45,29,.06)}
+  .destination-card__icon{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:rgba(155,119,82,.1);color:#74583f;font-family:var(--font-heading);font-size:1.8rem}.destination-card__icon--quill{font-size:2.3rem;transform:rotate(-12deg)}
+  .destination-card__copy{display:grid;gap:.3rem}.destination-card__copy strong{font-family:var(--font-heading);font-size:1.65rem;font-weight:500}.destination-card__copy>span{font-family:var(--font-heading);font-size:.9rem}.destination-card__copy small{color:var(--muted);font-size:.73rem;line-height:1.62}
+  .home-footer{display:grid;justify-items:center;gap:.8rem;margin-top:1.4rem;padding-top:1rem;color:var(--muted);text-align:center}.home-footer>:global(.book-ornament){width:3.8rem}.home-footer p{margin:0;font-family:var(--font-heading);font-size:.85rem}
+  .home-mobile-tabs{display:none}
 
-	:global(html) {
-		min-height: 100%;
-		background: #f4eee3;
-	}
-
-	:global(body) {
-		min-height: 100%;
-		margin: 0;
-		color: #29241e;
-		background:
-			radial-gradient(
-				circle at 50% 20%,
-				rgba(255, 255, 255, 0.65),
-				transparent 42%
-			),
-			#f4eee3;
-		font-family: "Literata", serif;
-	}
-
-	.cover {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		min-height: 100svh;
-		padding: 40px 24px 28px;
-		text-align: center;
-	}
-
-	.cover__content {
-		width: min(100%, 700px);
-		animation: reveal 1.2s ease both;
-	}
-
-	.cover__number {
-		margin: 0 0 32px;
-		color: #80664f;
-		font-family: "Cormorant Garamond", serif;
-		font-size: 15px;
-		letter-spacing: 0.22em;
-	}
-
-	h1 {
-		margin: 0;
-		font-family: "Cormorant Garamond", serif;
-		font-size: clamp(48px, 11vw, 90px);
-		font-weight: 500;
-		line-height: 0.95;
-		letter-spacing: -0.035em;
-		text-wrap: balance;
-	}
-
-	.cover__subtitle {
-		margin: 24px 0 0;
-		color: #766c60;
-		font-size: clamp(15px, 4vw, 19px);
-		font-weight: 300;
-		letter-spacing: 0.08em;
-	}
-
-	.cover__button {
-		display: inline-flex;
-		align-items: center;
-		gap: 13px;
-		margin-top: 52px;
-		padding: 15px 24px;
-		border: 1px solid rgba(58, 47, 36, 0.26);
-		border-radius: 999px;
-		color: #29241e;
-		background: rgba(251, 248, 242, 0.5);
-		font-size: 14px;
-		text-decoration: none;
-		transition:
-			transform 180ms ease,
-			background 180ms ease,
-			border-color 180ms ease;
-	}
-
-	.cover__button:hover {
-		border-color: rgba(58, 47, 36, 0.5);
-		background: #fbf8f2;
-		transform: translateY(-2px);
-	}
-
-	.cover__button:active {
-		transform: translateY(0);
-	}
-
-	.cover__button span {
-		font-size: 19px;
-		line-height: 1;
-		transition: transform 180ms ease;
-	}
-
-	.cover__button:hover span {
-		transform: translateX(3px);
-	}
-
-	.cover__footer {
-		position: absolute;
-		bottom: 28px;
-		margin: 0;
-		color: rgba(41, 36, 30, 0.56);
-		font-family: "Cormorant Garamond", serif;
-		font-size: 15px;
-		font-style: italic;
-		letter-spacing: 0.04em;
-		animation: reveal 1.2s 350ms ease both;
-	}
-
-	@keyframes reveal {
-		from {
-			opacity: 0;
-			transform: translateY(14px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@media (max-height: 600px) {
-		.cover {
-			justify-content: flex-start;
-			padding-top: 70px;
-		}
-
-		.cover__footer {
-			position: static;
-			margin-top: 65px;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.cover__content,
-		.cover__footer {
-			animation: none;
-		}
-
-		.cover__button,
-		.cover__button span {
-			transition: none;
-		}
-	}
+  @media(min-width:1200px){
+    .home-hero__copy{padding-left:.35rem}
+    .home-book{justify-self:start;margin-left:clamp(1rem,3vw,3rem)}
+    .home-hero__flowers{right:clamp(-.5rem,1vw,.8rem);bottom:1rem}
+  }
+  @media(max-width:860px){.home-hero{grid-template-columns:1fr;grid-template-rows:auto auto auto;gap:2.25rem;min-height:auto;padding:4.6rem 0 3.6rem;text-align:center}.home-hero__copy{grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:center}.home-hero__controls{grid-column:1;grid-row:3;display:flex;flex-direction:column;align-items:center;width:100%}.home-hero h1{max-width:none;font-size:clamp(4.2rem,15vw,6.5rem)}.home-hero__lead{max-width:34rem}.home-hero__extra{display:none}.home-hero__actions{width:min(100%,430px);flex-direction:column}.home-button{width:100%}.home-book{grid-column:1;grid-row:2;width:min(58vw,330px);transform:translateY(-5px)}.home-hero__flowers{right:2%;bottom:8.15rem;z-index:4;width:170px;opacity:.84}.home-hero__flowers--ghost{left:10%;right:auto;bottom:7.4rem;width:92px}.home-hero__updated{margin-top:1.2rem}.home-content{padding-top:2.5rem}.home-destinations{grid-template-columns:1fr}.destination-card{max-width:800px;width:100%;margin:0 auto}}
+  @media(max-width:640px){:global(body.home-page){padding-bottom:72px}.home-hero{width:100%;gap:1.25rem;padding:2.75rem 1.15rem 2.1rem;border-bottom:0}.home-hero h1{display:block;margin-top:1.05rem;line-height:1;letter-spacing:-.035em}.home-title__number{display:block;font-size:4.9rem;line-height:.78}.home-title__words{display:block;margin-top:.7rem;font-size:2rem;line-height:1;letter-spacing:.015em}.home-hero__eyebrow{font-size:.58rem}.home-hero__lead{gap:.1rem;margin-top:1.25rem;font-size:1.02rem;line-height:1.42}.home-book{width:min(55vw,230px);margin-top:.2rem;transform:translateY(-3px)}.home-book strong{font-size:5rem}.home-book em{font-size:1.25rem}.home-hero__flowers{right:-.15rem;bottom:9.65rem;z-index:4;width:138px;opacity:.86}.home-hero__flowers--ghost{left:-1.1rem;right:auto;bottom:9.2rem;width:88px;opacity:.16;transform:scaleX(-1) rotate(4deg)}.home-hero__actions{margin-top:.15rem}.home-button{min-width:0;padding:.92rem 1.15rem}.home-hero__updated{font-size:.75rem;flex-wrap:wrap;justify-content:center}.home-content{width:100%;padding:1.5rem 1rem 1rem;border-top:1px solid var(--line)}.home-content>:global(.book-ornament){display:block;width:3.6rem;margin:0 auto 1.7rem}.home-latest{width:100%}.latest-entry{grid-template-columns:80px minmax(0,1fr);align-items:stretch}.latest-entry__date{grid-row:1/3}.latest-entry__copy{padding:1rem}.latest-entry__copy>strong{font-size:1.15rem}.latest-entry__copy>span{font-size:.76rem}.latest-entry__link{grid-column:2;padding:.1rem 1rem 1rem;justify-self:end}.latest-entry--empty{grid-template-columns:1fr}.latest-entry--empty .latest-entry__link{grid-column:1}.home-destinations{grid-template-columns:1fr 1fr;gap:.55rem}.destination-card{grid-template-columns:1fr;justify-items:center;min-height:135px;padding:1rem .45rem;text-align:center}.destination-card__icon{width:48px;height:48px;font-size:1.55rem}.destination-card__copy strong{font-size:1.15rem}.destination-card__copy>span,.destination-card__copy small,.destination-card__link{display:none}.home-footer{display:none}.home-mobile-tabs{position:fixed;right:0;bottom:0;left:0;z-index:40;display:grid;grid-template-columns:1fr 1fr;min-height:66px;border-top:1px solid var(--line);background:rgba(248,242,232,.94);backdrop-filter:blur(16px)}.home-mobile-tabs a{display:grid;place-items:center;align-content:center;gap:.1rem;border-right:1px solid var(--line);color:#59483b}.home-mobile-tabs a:last-child{border-right:0}.home-mobile-tabs span{font-family:var(--font-heading);font-size:1.45rem;line-height:1}.home-mobile-tabs small{font-family:var(--font-heading);font-size:.8rem}}
 </style>

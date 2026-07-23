@@ -1,0 +1,25 @@
+---
+interface Props {
+  as?: "section" | "main" | "div" | "article" | "header" | "footer";
+  spacing?: "none" | "sm" | "md" | "lg" | "xl";
+  class?: string;
+  labelledby?: string;
+  label?: string;
+}
+
+const {
+  as: Tag = "section",
+  spacing = "lg",
+  class: className = "",
+  labelledby,
+  label,
+} = Astro.props;
+---
+
+<Tag
+  class:list={["ds-section", `ds-section--${spacing}`, className]}
+  aria-labelledby={labelledby}
+  aria-label={label}
+>
+  <slot />
+</Tag>

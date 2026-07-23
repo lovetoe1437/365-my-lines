@@ -1,0 +1,339 @@
+<div id="app-toast-region" class="app-toast-region" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  type ToastTone = "success" | "error" | "warning" | "info";
+  type ToastOptions = {
+    tone?: ToastTone;
+    title?: string;
+    message?: string;
+    actionLabel?: string;
+    actionHref?: string;
+    duration?: number;
+  };
+
+  declare global {
+    interface Window {
+      showAppToast?: (options?: ToastOptions) => void;
+      setAppToastForNextPage?: (options?: ToastOptions) => void;
+    }
+  }
+
+  const region = document.getElementById("app-toast-region");
+  const FLASH_KEY = "365-my-lines:toast";
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  let toastTimer: number | undefined;
+
+  const iconPaths: Record<ToastTone, string[]> = {
+    success: ["M7 12.5l3.1 3.1L17.5 8"],
+    error: ["M12 7.5v5.2", "M12 16.5h.01"],
+    warning: ["M12 8.3v4.8", "M12 16.5h.01"],
+    info: ["M12 10.5v6", "M12 7.5h.01"],
+  };
+
+  const createIcon = (tone: ToastTone): SVGSVGElement => {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+
+    for (const d of iconPaths[tone]) {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", d);
+      svg.append(path);
+    }
+
+    return svg;
+  };
+
+  const hideToast = (toast: HTMLElement): void => {
+    if (toast.dataset.state === "leaving") return;
+    toast.dataset.state = "leaving";
+    window.clearTimeout(toastTimer);
+    window.setTimeout(() => toast.remove(), 240);
+  };
+
+  window.showAppToast = (options: ToastOptions = {}): void => {
+    if (!region) return;
+
+    window.clearTimeout(toastTimer);
+    region.replaceChildren();
+
+    const tone: ToastTone = options.tone ?? "info";
+    const toast = document.createElement("section");
+    toast.className = `app-toast app-toast--${tone}`;
+    toast.dataset.state = "entering";
+    toast.setAttribute("role", tone === "error" ? "alert" : "status");
+
+    const icon = document.createElement("span");
+    icon.className = "app-toast__icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.append(createIcon(tone));
+
+    const copy = document.createElement("div");
+    copy.className = "app-toast__copy";
+
+    const title = document.createElement("strong");
+    title.textContent = options.title ?? "Готово";
+    copy.append(title);
+
+    if (options.message) {
+      const message = document.createElement("p");
+      message.textContent = options.message;
+      copy.append(message);
+    }
+
+    toast.append(icon, copy);
+
+    if (options.actionLabel) {
+      const action = document.createElement("button");
+      action.className = "app-toast__action";
+      action.type = "button";
+      action.textContent = options.actionLabel;
+      action.addEventListener("click", () => {
+        if (options.actionHref) window.location.href = options.actionHref;
+        else hideToast(toast);
+      });
+      toast.append(action);
+    }
+
+    const close = document.createElement("button");
+    close.className = "app-toast__close";
+    close.type = "button";
+    close.setAttribute("aria-label", "Закрыть уведомление");
+    close.innerHTML = '<span aria-hidden="true">×</span>';
+    close.addEventListener("click", () => hideToast(toast));
+    toast.append(close);
+
+    region.append(toast);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        toast.dataset.state = "visible";
+      });
+    });
+
+    const duration = Math.max(1800, options.duration ?? (tone === "error" ? 5200 : 3200));
+    toastTimer = window.setTimeout(() => hideToast(toast), duration);
+  };
+
+  window.setAppToastForNextPage = (options: ToastOptions = {}): void => {
+    try {
+      sessionStorage.setItem(FLASH_KEY, JSON.stringify(options));
+    } catch {}
+  };
+
+  try {
+    const raw = sessionStorage.getItem(FLASH_KEY);
+    if (raw) {
+      sessionStorage.removeItem(FLASH_KEY);
+      const options = JSON.parse(raw) as ToastOptions;
+      window.setTimeout(() => window.showAppToast?.(options), 120);
+    }
+  } catch {
+    try { sessionStorage.removeItem(FLASH_KEY); } catch {}
+  }
+</script>
+
+<style is:global>
+  .app-toast-region {
+    position: fixed;
+    z-index: 1200;
+    top: 1.35rem;
+    right: 1.35rem;
+    display: grid;
+    width: min(calc(100% - 2rem), 410px);
+    pointer-events: none;
+  }
+
+  .app-toast {
+    --toast-accent: #6d7891;
+    --toast-soft: #e5e8ef;
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.35rem minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: .8rem;
+    min-height: 4.55rem;
+    padding: .8rem .72rem .8rem .9rem;
+    overflow: hidden;
+    border: 1px solid rgba(58, 47, 36, .13);
+    border-radius: 15px;
+    background: rgba(251, 248, 242, .97);
+    color: var(--ink, #29241e);
+    box-shadow: 0 14px 36px rgba(35, 28, 22, .14), 0 2px 8px rgba(35, 28, 22, .06);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-8px) scale(.99);
+    transition: opacity 220ms ease, transform 220ms cubic-bezier(.22, 1, .36, 1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .app-toast[data-state="visible"] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .app-toast[data-state="leaving"] {
+    opacity: 0;
+    transform: translateY(-6px) scale(.99);
+  }
+
+  .app-toast--success { --toast-accent: #6f8a66; --toast-soft: #e4eee0; }
+  .app-toast--error { --toast-accent: #a94f49; --toast-soft: #f4e2df; }
+  .app-toast--warning { --toast-accent: #a7773f; --toast-soft: #f4eadc; }
+  .app-toast--info { --toast-accent: #6d7891; --toast-soft: #e5e8ef; }
+
+  .app-toast__icon {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--toast-soft);
+    color: var(--toast-accent);
+  }
+
+  .app-toast__icon svg {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    max-width: 1.25rem;
+    max-height: 1.25rem;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .app-toast__copy {
+    min-width: 0;
+    padding-right: .15rem;
+  }
+
+  .app-toast__copy strong {
+    display: block;
+    font-family: var(--font-heading, serif);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.12;
+  }
+
+  .app-toast__copy p {
+    margin: .18rem 0 0;
+    color: var(--muted, #766c60);
+    font-size: .77rem;
+    line-height: 1.38;
+  }
+
+  .app-toast__action {
+    align-self: center;
+    min-width: 4.4rem;
+    padding: .55rem .78rem;
+    border: 1px solid color-mix(in srgb, var(--toast-accent) 25%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--toast-accent) 9%, transparent);
+    color: var(--toast-accent);
+    font: 600 .75rem var(--font-body, serif);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 160ms ease, transform 160ms ease;
+  }
+
+  .app-toast__action:hover {
+    background: color-mix(in srgb, var(--toast-accent) 15%, transparent);
+  }
+
+  .app-toast__action:active {
+    transform: translateY(1px);
+  }
+
+  .app-toast__close {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted, #766c60);
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .app-toast__close span {
+    display: block;
+    transform: translateY(-1px);
+    font: 400 1.35rem/1 Arial, sans-serif;
+  }
+
+  .app-toast__close:hover {
+    background: rgba(58, 47, 36, .07);
+    color: var(--ink, #29241e);
+  }
+
+  .app-toast__action:focus-visible,
+  .app-toast__close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--toast-accent) 55%, transparent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .app-toast-region {
+      top: auto;
+      right: .75rem;
+      bottom: calc(.8rem + env(safe-area-inset-bottom));
+      left: .75rem;
+      width: auto;
+    }
+
+    .app-toast {
+      grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+      min-height: 4.2rem;
+      gap: .7rem;
+      padding: .72rem .68rem .72rem .78rem;
+      border-radius: 14px;
+      transform: translateY(10px) scale(.99);
+    }
+
+    .app-toast[data-state="visible"] {
+      transform: translateY(0) scale(1);
+    }
+
+    .app-toast[data-state="leaving"] {
+      transform: translateY(8px) scale(.99);
+    }
+
+    .app-toast__icon {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .app-toast__icon svg {
+      width: 1.08rem;
+      height: 1.08rem;
+      max-width: 1.08rem;
+      max-height: 1.08rem;
+    }
+
+    .app-toast__copy strong { font-size: 1rem; }
+    .app-toast__copy p { font-size: .74rem; }
+    .app-toast__close { width: 2rem; height: 2rem; }
+
+    .app-toast__action {
+      grid-column: 2 / 4;
+      justify-self: start;
+      margin-top: .15rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-toast {
+      transition: opacity 120ms linear;
+      transform: none !important;
+    }
+  }
+</style>

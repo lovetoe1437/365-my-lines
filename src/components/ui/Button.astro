@@ -1,44 +1,69 @@
 ---
 interface Props {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "link";
+  size?: "sm" | "md" | "lg";
   type?: "button" | "submit" | "reset";
   href?: string;
   disabled?: boolean;
+  loading?: boolean;
   fullWidth?: boolean;
+  iconOnly?: boolean;
+  label?: string;
   class?: string;
 }
 
 const {
   variant = "primary",
+  size = "md",
   type = "button",
   href,
   disabled = false,
+  loading = false,
   fullWidth = false,
+  iconOnly = false,
+  label,
   class: className = "",
 } = Astro.props;
 
+const isUnavailable = disabled || loading;
 const classes = [
   "button",
   `button--${variant}`,
+  `button--${size}`,
   fullWidth && "button--full",
+  iconOnly && "button--icon-only",
+  loading && "button--loading",
   className,
 ]
   .filter(Boolean)
   .join(" ");
+
+const accessibilityLabel = iconOnly ? label : undefined;
 ---
 
 {
   href ? (
-    <a class={classes} href={href} aria-disabled={disabled ? "true" : undefined}>
-      <span class="button__content">
-        <slot />
-      </span>
+    <a
+      class={classes}
+      href={isUnavailable ? undefined : href}
+      aria-disabled={isUnavailable ? "true" : undefined}
+      aria-busy={loading ? "true" : undefined}
+      aria-label={accessibilityLabel}
+      tabindex={isUnavailable ? -1 : undefined}
+    >
+      {loading && <span class="button__spinner" aria-hidden="true"></span>}
+      <span class="button__content"><slot /></span>
     </a>
   ) : (
-    <button class={classes} type={type} disabled={disabled}>
-      <span class="button__content">
-        <slot />
-      </span>
+    <button
+      class={classes}
+      type={type}
+      disabled={isUnavailable}
+      aria-busy={loading ? "true" : undefined}
+      aria-label={accessibilityLabel}
+    >
+      {loading && <span class="button__spinner" aria-hidden="true"></span>}
+      <span class="button__content"><slot /></span>
     </button>
   )
 }

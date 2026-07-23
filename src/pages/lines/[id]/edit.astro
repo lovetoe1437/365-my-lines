@@ -1,0 +1,75 @@
+---
+import AppLayout from "../../../layouts/AppLayout.astro";
+import BookLineEditorForm from "../../../components/editor/BookLineEditorForm.astro";
+import DeleteConfirmDialog from "../../../components/DeleteConfirmDialog.astro";
+import { env } from "cloudflare:workers";
+import { getBookLine } from "../../../lib/db/book-lines";
+
+export const prerender = false;
+
+const raw = Astro.params.id ?? "";
+if (!raw.startsWith("d-")) return Astro.redirect(`/lines/${raw}`);
+
+const id = Number(raw.slice(2));
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect("/lines");
+
+const line = await getBookLine(env.DB, id);
+if (!line) {
+  Astro.response.status = 404;
+  return Astro.rewrite("/404");
+}
+
+const readingUrl = `/lines/${String(line.number).padStart(3, "0")}`;
+---
+
+<AppLayout title={`Изменить — ${line.title}`} class="book-editor-page">
+  <main class="editor-shell" data-book-line-editor data-line-id={id} data-reading-url={readingUrl}>
+    <a class="back" href={readingUrl}>← Вернуться к странице</a>
+    <BookLineEditorForm
+      number={line.number}
+      lineDate={line.line_date}
+      title={line.title}
+      content={line.content}
+      readingUrl={readingUrl}
+    />
+  </main>
+
+  <DeleteConfirmDialog
+    title="Удалить эту страницу?"
+    message="Она исчезнет из книги навсегда. Это действие нельзя отменить."
+    confirmLabel="Удалить страницу"
+  />
+</AppLayout>
+
+<script>
+  import { initBookLineEditor } from "../../../lib/editor/initBookLineEditor";
+  initBookLineEditor();
+</script>
+
+<style>
+  :global(.book-editor-page) {
+    background: var(--paper);
+  }
+
+  :global(body.is-leaving) {
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+
+  .editor-shell {
+    width: min(100%, 980px);
+    margin: auto;
+    padding: 2rem 1.5rem 6rem;
+  }
+
+  .back {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  @media (max-width: 650px) {
+    .editor-shell {
+      padding: 1rem 0.9rem 3rem;
+    }
+  }
+</style>

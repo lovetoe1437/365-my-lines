@@ -1,0 +1,247 @@
+---
+interface Props {
+  variant: "book" | "diary";
+  previousHref?: string | null;
+  previousTitle?: string | null;
+  nextHref?: string | null;
+  nextTitle?: string | null;
+  nextEyebrow?: string | null;
+  currentNumber: number | string;
+  total: number;
+  indexHref: string;
+  previousDisabledEyebrow?: string;
+  previousDisabledTitle?: string;
+  finalHref?: string | null;
+  finalEyebrow?: string | null;
+  finalTitle?: string | null;
+}
+
+const {
+  variant,
+  previousHref = null,
+  previousTitle = null,
+  nextHref = null,
+  nextTitle = null,
+  nextEyebrow = "Следующая",
+  currentNumber,
+  total,
+  indexHref,
+  previousDisabledEyebrow = "Начало книги",
+  previousDisabledTitle = "Первая страница",
+  finalHref = null,
+  finalEyebrow = null,
+  finalTitle = null,
+} = Astro.props;
+
+const paddedNumber = String(currentNumber).padStart(3, "0");
+---
+
+{
+  variant === "book" ? (
+    <nav class="book-turner" aria-label="Перелистывание книги">
+      <div class="book-turn book-turn--previous">
+        {previousHref ? (
+          <a href={previousHref} data-turn="previous">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M19 12H5m6-6-6 6 6 6"></path>
+            </svg>
+            <span class="book-turn__copy">
+              <small>Предыдущая</small>
+              <strong>{previousTitle}</strong>
+            </span>
+          </a>
+        ) : (
+          <span class="book-turn__disabled">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M19 12H5m6-6-6 6 6 6"></path>
+            </svg>
+            <span class="book-turn__copy">
+              <small>{previousDisabledEyebrow}</small>
+              <strong>{previousDisabledTitle}</strong>
+            </span>
+          </span>
+        )}
+      </div>
+
+      <a class="book-counter" href={indexHref} aria-label={`Страница ${currentNumber} из ${total}`}>
+        <span class="book-counter__word">Страница</span>
+        <span>{currentNumber}</span>
+        <i class="book-counter__separator">из</i>
+        <span>{total}</span>
+      </a>
+
+      <div class="book-turn book-turn--next">
+        {nextHref ? (
+          <a href={nextHref} data-turn="next">
+            <span class="book-turn__copy">
+              <small>{nextEyebrow}</small>
+              <strong>{nextTitle}</strong>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 12h14m-6-6 6 6-6 6"></path>
+            </svg>
+          </a>
+        ) : (
+          <a href={finalHref ?? indexHref} data-turn={finalHref ? "next" : undefined}>
+            <span class="book-turn__copy">
+              <small>{finalEyebrow ?? "Конец книги"}</small>
+              <strong>{finalTitle ?? "Все строки"}</strong>
+            </span>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 12h14m-6-6 6 6-6 6"></path>
+            </svg>
+          </a>
+        )}
+      </div>
+    </nav>
+  ) : (
+    <>
+      <nav class="diary-turner" aria-label="Навигация между страницами">
+        {previousHref ? (
+          <a
+            class="page-turner__link diary-turner__link diary-turner__link--previous"
+            href={previousHref}
+            rel="prev"
+            aria-label={`Предыдущая страница: ${previousTitle}`}
+          >
+            <span class="diary-turner__arrow" aria-hidden="true">←</span>
+            <span class="diary-turner__label">Предыдущая</span>
+          </a>
+        ) : (
+          <span class="diary-turner__empty" aria-hidden="true"></span>
+        )}
+
+        <a
+          class="diary-turner__number"
+          href={indexHref}
+          aria-label={`Страница ${currentNumber} из ${total}. Вернуться к содержанию`}
+        >
+          <span aria-hidden="true">—</span>
+          <span>{paddedNumber}</span>
+          <span aria-hidden="true">—</span>
+        </a>
+
+        {nextHref ? (
+          <a
+            class="page-turner__link diary-turner__link diary-turner__link--next"
+            href={nextHref}
+            rel="next"
+            aria-label={`Следующая страница: ${nextTitle}`}
+          >
+            <span class="diary-turner__label">Следующая</span>
+            <span class="diary-turner__arrow" aria-hidden="true">→</span>
+          </a>
+        ) : (
+          <span class="diary-turner__empty" aria-hidden="true"></span>
+        )}
+      </nav>
+      <p class="diary-turner__hint">На компьютере можно листать клавишами ← и →</p>
+    </>
+  )
+}
+
+<style>
+  .book-turner {
+    display: grid;
+    min-height: 82px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: auto;
+    padding: 1.2rem clamp(1.35rem, 3.8vw, 3.4rem);
+    border-top: 1px solid var(--line);
+  }
+  .book-turn { min-width: 0; }
+  .book-turn > a, .book-turn__disabled {
+    display: inline-flex; max-width: 100%; align-items: center; gap: 1rem;
+    color: var(--ink); text-decoration: none;
+  }
+  .book-turn > a { transition: color 180ms ease, transform 180ms ease; }
+  .book-turn--previous > a:hover { color: var(--accent); transform: translateX(-4px); }
+  .book-turn--next { text-align: right; }
+  .book-turn--next > a { justify-content: flex-end; }
+  .book-turn--next > a:hover { color: var(--accent); transform: translateX(4px); }
+  .book-turn__disabled { color: var(--muted); opacity: 0.55; }
+  .book-turn__copy { display: grid; min-width: 0; }
+  .book-turn__copy small {
+    margin-bottom: 0.22rem; color: var(--muted); font-family: var(--font-heading);
+    font-size: 0.78rem; font-weight: 500;
+  }
+  .book-turn__copy strong {
+    overflow: hidden; font-family: var(--font-heading); font-size: clamp(0.85rem, 1.4vw, 1rem);
+    font-weight: 500; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .book-counter {
+    display: inline-flex; align-items: baseline; gap: 0.34rem;
+    color: color-mix(in srgb, var(--ink) 86%, transparent); font-family: var(--font-heading);
+    font-size: 1.05rem; font-variant-numeric: lining-nums tabular-nums; text-decoration: none;
+    transition: color 180ms ease, transform 180ms ease;
+  }
+  .book-counter:hover { color: var(--accent); transform: translateY(-2px); }
+  .book-counter i { color: var(--muted); font-style: normal; }
+  .book-counter__word { color: var(--muted); }
+
+  .diary-turner {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center; gap: clamp(1rem, 4vw, 3rem); margin-top: clamp(6rem, 14vw, 10rem);
+    padding-top: 2rem; border-top: 1px solid var(--line);
+  }
+  .diary-turner__link {
+    display: inline-flex; align-items: center; gap: 0.75rem; min-width: 0;
+    color: var(--muted); font-size: 0.9rem; letter-spacing: 0.04em; text-decoration: none;
+    transition: color 180ms ease, transform 180ms ease;
+  }
+  .diary-turner__link--previous { justify-self: start; }
+  .diary-turner__link--next { justify-self: end; }
+  .diary-turner__link:hover { color: var(--ink); }
+  .diary-turner__link--previous:hover { transform: translateX(-3px); }
+  .diary-turner__link--next:hover { transform: translateX(3px); }
+  .diary-turner__arrow { font-size: 1.2rem; line-height: 1; }
+  .diary-turner__number {
+    display: inline-flex; align-items: center; gap: 0.65rem; color: var(--accent);
+    font-family: "Cormorant Garamond", serif; font-size: 1rem; letter-spacing: 0.16em;
+    text-decoration: none; transition: color 180ms ease, letter-spacing 180ms ease;
+  }
+  .diary-turner__number:hover { color: var(--ink); letter-spacing: 0.2em; }
+  .diary-turner__empty { min-width: 1px; }
+  .diary-turner__hint {
+    margin: 1.25rem 0 0; color: color-mix(in srgb, var(--muted) 72%, transparent);
+    font-size: 0.72rem; letter-spacing: 0.08em; text-align: center;
+  }
+
+  @media (max-width: 700px) {
+    .book-turner {
+      position: sticky; z-index: 5; bottom: 0; min-height: 66px; gap: 0.75rem;
+      padding: 0.7rem 1rem max(0.7rem, env(safe-area-inset-bottom));
+      border-top-color: color-mix(in srgb, var(--line) 82%, transparent);
+      background: rgba(251, 248, 242, 0.94); box-shadow: 0 -10px 28px rgba(52, 39, 27, 0.055);
+      backdrop-filter: blur(16px);
+    }
+    .book-turn__copy { display: none; }
+    .book-turn > a, .book-turn__disabled {
+      width: 44px; height: 44px; justify-content: center; border-radius: 999px;
+    }
+    .book-turn > a:hover { background: rgba(128, 102, 79, 0.07); transform: none; }
+    .book-turn--next { display: flex; justify-content: flex-end; }
+    .book-counter { gap: 0.4rem; font-size: 1.12rem; }
+    .book-counter__word { display: none; }
+    .book-counter__separator { font-size: 0; }
+    .book-counter__separator::before { content: "/"; font-size: 1.12rem; }
+  }
+
+  @media (max-width: 560px) {
+    .diary-turner { gap: 0.75rem; margin-top: 5rem; padding-top: 1.5rem; }
+    .diary-turner__label {
+      position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .diary-turner__link {
+      width: 2.75rem; height: 2.75rem; justify-content: center; border-radius: 50%; font-size: 0;
+    }
+    .diary-turner__link--previous { justify-self: start; }
+    .diary-turner__link--next { justify-self: end; }
+    .diary-turner__arrow { font-size: 1.55rem; }
+    .diary-turner__number { gap: 0.5rem; font-size: 0.95rem; }
+    .diary-turner__hint { display: none; }
+  }
+</style>

@@ -1,0 +1,19 @@
+---
+interface Props {
+  as?: "h1" | "h2" | "h3" | "h4" | "p";
+  size?: "sm" | "md" | "lg" | "display";
+  align?: "start" | "center" | "end";
+  class?: string;
+  id?: string;
+}
+
+const {
+  as: Tag = "h2",
+  size = "md",
+  align = "start",
+  class: className = "",
+  id,
+} = Astro.props;
+---
+
+<Tag id={id} class:list={["ds-heading", `ds-heading--${size}`, `ds-text--${align}`, className]}><slot /></Tag>

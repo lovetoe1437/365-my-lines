@@ -1,0 +1,23 @@
+---
+interface Props {
+  class?: string;
+  statusText?: string;
+  itemTag?: "p" | "span";
+  strongCount?: boolean;
+}
+
+const {
+  class: className = "editor-meta",
+  statusText = "Черновик сохраняется автоматически",
+  itemTag = "p",
+  strongCount = false,
+} = Astro.props;
+
+const Item = itemTag;
+const Count = strongCount ? "b" : "span";
+---
+
+<footer class={className}>
+  <Item id="draft-status">{statusText}</Item>
+  <Item><Count id="character-count">0</Count> знаков</Item>
+</footer>

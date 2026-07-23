@@ -41,3 +41,14 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+## Unspoken 1.7
+
+После обновления примени новую D1-миграцию:
+
+```bash
+npx wrangler d1 migrations apply 365-my-lines-db --local
+npx wrangler d1 migrations apply 365-my-lines-db --remote
+```
+
+Редактор доступен по адресу `/unspoken/edit` после входа администратора. В нём можно менять весь текст и выбирать режим отображения: скрытая страница, эпилог книги или отдельная ссылка внизу дневника.

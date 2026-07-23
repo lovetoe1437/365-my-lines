@@ -1,71 +1,149 @@
-﻿:root {
-  /* Цвета */
-  --color-paper: #f4eee3;
-  --color-paper-light: #fbf8f2;
-  --color-paper-deep: #e8ddcd;
+:root {
+  /* Core palette */
+  --paper: #eee4d4;
+  --paper-light: #faf6ed;
+  --paper-deep: #d8c7ae;
+  --diary-paper: #f3e8d8;
+  --diary-paper-light: #fcf8f0;
+  --ink: #30271f;
+  --ink-strong: #241d17;
+  --muted: #817366;
+  --muted-soft: #9a8d80;
+  --accent: #8a6b50;
+  --accent-dark: #654b38;
+  --line: rgba(67, 51, 38, 0.16);
+  --line-strong: rgba(67, 51, 38, 0.24);
+  --shadow: rgba(58, 42, 29, 0.18);
 
-  --color-ink: #29241e;
-  --color-muted: #766c60;
-  --color-accent: #80664f;
-  --color-accent-dark: #684f3c;
+  /* Semantic colors */
+  --color-canvas: var(--paper);
+  --color-surface: var(--paper-light);
+  --color-surface-muted: var(--paper);
+  --color-surface-deep: var(--paper-deep);
+  --color-text: var(--ink);
+  --color-text-strong: var(--ink-strong);
+  --color-text-muted: var(--muted);
+  --color-text-soft: var(--muted-soft);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-dark);
+  --color-border: var(--line);
+  --color-border-strong: var(--line-strong);
+  --color-focus: #7b5f47;
+  --color-overlay: rgba(35, 28, 22, 0.52);
 
-  --color-line: rgba(58, 47, 36, 0.18);
-  --color-shadow: rgba(54, 43, 33, 0.12);
+  --color-success: #647f5c;
+  --color-success-soft: #e4eee0;
+  --color-warning: #9b6d36;
+  --color-warning-soft: #f4eadc;
+  --color-danger: #9d4742;
+  --color-danger-strong: #803733;
+  --color-danger-soft: #f4e2df;
+  --color-info: #657188;
+  --color-info-soft: #e5e8ef;
 
-  /* Шрифты */
+  /* Backwards-compatible aliases */
+  --color-paper: var(--paper);
+  --color-paper-light: var(--paper-light);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent-dark: var(--accent-dark);
+  --color-line: var(--line);
+  --color-shadow: var(--shadow);
+
+  /* Typography */
   --font-heading: "Cormorant Garamond", Georgia, serif;
   --font-body: "Literata", Georgia, serif;
+  --font-size-caption: 0.75rem;
+  --font-size-small: 0.875rem;
+  --font-size-body: 1rem;
+  --font-size-body-lg: 1.125rem;
+  --font-size-title-sm: clamp(1.75rem, 4vw, 2.25rem);
+  --font-size-title: clamp(2.25rem, 6vw, 3.75rem);
+  --font-size-display: clamp(3rem, 9vw, 6.5rem);
+  --line-height-tight: 1.05;
+  --line-height-copy: 1.75;
+  --tracking-eyebrow: 0.22em;
+  --text-base: var(--font-size-body);
 
-  /* Размеры текста */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: 2.25rem;
-  --text-4xl: clamp(2.5rem, 6vw, 4.5rem);
+  /* Layout */
+  --page-width: 76rem;
+  --reading-width: 46rem;
+  --control-height-sm: 2.5rem;
+  --control-height-md: 3rem;
+  --control-height-lg: 3.5rem;
 
-  /* Отступы */
+  /* Spacing: 4px base scale */
+  --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
 
-  /* Скругления */
-  --radius-sm: 0.5rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.5rem;
+  /* Shape */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.125rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
   --radius-full: 999px;
+  --radius-soft: var(--radius-lg);
 
-  /* Тени */
-  --shadow-soft:
-    0 1px 2px rgba(54, 43, 33, 0.04),
-    0 12px 35px var(--color-shadow);
+  /* Elevation */
+  --shadow-xs: 0 1px 3px rgba(58, 42, 29, 0.08);
+  --shadow-sm: 0 6px 18px rgba(54, 43, 33, 0.08);
+  --shadow-md: 0 12px 30px rgba(45, 33, 24, 0.12);
+  --shadow-lg: 0 24px 60px rgba(45, 33, 24, 0.16);
+  --shadow-xl: 0 32px 100px rgba(30, 23, 17, 0.24);
+  --paper-shadow: var(--shadow-lg), 0 3px 12px rgba(58, 42, 29, 0.07);
 
-  /* Размеры интерфейса */
-  --page-width: 76rem;
-  --reading-width: 46rem;
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-instant: 100ms;
+  --duration-fast: 160ms;
+  --duration-normal: 260ms;
+  --duration-slow: 520ms;
+  --duration-ceremonial: 720ms;
+  --transition-fast: var(--duration-fast) ease;
+  --transition-normal: var(--duration-normal) var(--ease-standard);
+  --transition-slow: var(--duration-slow) var(--ease-standard);
+  --ease-out: var(--ease-standard);
 
-  /* Анимации */
-  --transition-fast: 160ms ease;
-  --transition-normal: 280ms ease;
-}
+  /* Focus */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+  --focus-ring: 0 0 0 var(--focus-ring-offset) var(--color-surface),
+    0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--color-focus);
 
-[data-theme="dark"] {
-  --color-paper: #1f1b18;
-  --color-paper-light: #29231f;
-  --color-paper-deep: #342c26;
+  /* Layering */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-dropdown: 400;
+  --z-dialog: 800;
+  --z-toast: 1200;
 
-  --color-ink: #f3eadf;
-  --color-muted: #b8aa9c;
-  --color-accent: #c1a58b;
-  --color-accent-dark: #d3b89e;
-
-  --color-line: rgba(244, 234, 223, 0.14);
-  --color-shadow: rgba(0, 0, 0, 0.3);
+  /* Reading surface */
+  --reading-paper: #fbf7ee;
+  --reading-ink: #211c17;
+  --reading-muted: #776b60;
+  --reading-accent: #9a7655;
+  --reading-canvas-start: #e8dece;
+  --reading-canvas-end: #d8c8b2;
+  --reading-border: rgba(86, 65, 48, 0.18);
+  --reading-edge: rgba(87, 66, 48, 0.045);
+  --reading-edge-soft: rgba(87, 66, 48, 0.035);
+  --reading-shadow: 0 35px 80px rgba(42, 31, 21, 0.22), 0 8px 24px rgba(42, 31, 21, 0.12);
+  --reading-inner-shadow: inset 0 0 60px rgba(112, 85, 60, 0.045);
 }

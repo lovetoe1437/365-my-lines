@@ -1,0 +1,109 @@
+---
+interface Props {
+  backHref?: string;
+  editHref: string;
+}
+
+const {
+  backHref = "/lines",
+  editHref,
+} = Astro.props;
+---
+
+<header class="sheet-toolbar">
+  <a class="toolbar-link back-link" href={backHref} aria-label="Вернуться к оглавлению">
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M19 12H5m6-6-6 6 6 6"></path>
+    </svg>
+    <span>К оглавлению</span>
+  </a>
+
+  <a
+    class="toolbar-link edit-link"
+    href={editHref}
+    aria-label="Изменить страницу"
+  >
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M13.5 6.5 17.5 10.5M4 20l4.5-1 10-10a2.83 2.83 0 0 0-4-4l-10 10L4 20Z"></path>
+    </svg>
+    <span>Изменить страницу</span>
+  </a>
+</header>
+
+<style>
+  .sheet-toolbar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: clamp(1.35rem, 2.8vw, 2.25rem)
+      clamp(1.35rem, 3.8vw, 3.4rem);
+  }
+
+  .toolbar-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: color-mix(in srgb, var(--accent) 74%, transparent);
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    opacity: 0.82;
+    text-decoration: none;
+    transition:
+      color 180ms ease,
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  .toolbar-link:hover {
+    color: var(--ink);
+    opacity: 1;
+  }
+
+  .back-link:hover {
+    transform: translateX(-3px);
+  }
+
+  .edit-link:hover {
+    transform: translateY(-2px);
+  }
+
+  .toolbar-link svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.35;
+  }
+
+  @media (max-width: 700px) {
+    .sheet-toolbar {
+      padding: 1.2rem 1.15rem;
+    }
+
+    .toolbar-link span {
+      display: none;
+    }
+
+    .toolbar-link {
+      min-width: 42px;
+      min-height: 42px;
+      justify-content: center;
+      border-radius: 999px;
+    }
+
+    .toolbar-link:hover {
+      background: rgba(128, 102, 79, 0.07);
+      transform: none;
+    }
+
+    .toolbar-link svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+</style>

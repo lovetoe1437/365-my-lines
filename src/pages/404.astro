@@ -1,0 +1,97 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import Paper from "../components/surface/Paper.astro";
+import Eyebrow from "../components/typography/Eyebrow.astro";
+import Heading from "../components/typography/Heading.astro";
+import Text from "../components/typography/Text.astro";
+
+export const prerender = false;
+Astro.response.status = 404;
+
+// На некоторых адаптерах Astro серверная 404-страница получает путь `/404`,
+// а не исходный неверный URL. Поэтому контекст уточняется в браузере ниже.
+const destination = { href: "/lines", label: "Открыть книгу" };
+---
+
+<AppLayout
+  title="Страница не найдена"
+  description="Этой страницы больше нет или адрес был указан неверно."
+  class="not-found-page"
+  hideNavigation={true}
+  noindex={true}
+>
+  <section class="not-found" aria-labelledby="not-found-title">
+    <div class="not-found__glow" aria-hidden="true"></div>
+    <Paper as="article" tone="light" elevation="none" padding="none" radius="none" class="not-found__paper">
+      <p class="not-found__number" aria-hidden="true">404</p>
+      <div class="not-found__ornament" aria-hidden="true">
+        <span></span><b>✦</b><span></span>
+      </div>
+      <Eyebrow align="center" class="not-found__eyebrow">Страница потерялась между строк</Eyebrow>
+      <Heading as="h1" size="display" align="center" id="not-found-title" class="not-found__title">Здесь ничего не написано</Heading>
+      <Text as="p" size="lg" tone="muted" align="center" class="not-found__text">
+        Возможно, ссылка устарела, страница была удалена<br />
+        или в адресе появилась лишняя цифра.
+      </Text>
+
+      <div class="not-found__actions">
+        <a class="not-found__button not-found__button--primary" href="/">
+          <span>Вернуться на главную</span><span aria-hidden="true">→</span>
+        </a>
+        <a class="not-found__button" href={destination.href} data-context-destination>
+          <span data-context-label>{destination.label}</span><span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <Text as="p" size="sm" tone="soft" align="center" class="not-found__footer">365 моих строк · история продолжается</Text>
+    </Paper>
+  </section>
+</AppLayout>
+
+<script is:inline>
+  (() => {
+    const pathname = window.location.pathname;
+    const isDiaryContext =
+      pathname === "/book" ||
+      pathname.startsWith("/book/") ||
+      pathname === "/write" ||
+      pathname.startsWith("/pages/") ||
+      pathname.startsWith("/diary/");
+
+    const link = document.querySelector("[data-context-destination]");
+    const label = document.querySelector("[data-context-label]");
+
+    if (!(link instanceof HTMLAnchorElement) || !(label instanceof HTMLElement)) return;
+
+    if (isDiaryContext) {
+      link.href = "/book";
+      label.textContent = "Открыть дневник";
+    } else {
+      link.href = "/lines";
+      label.textContent = "Открыть книгу";
+    }
+  })();
+</script>
+
+<style>
+  :global(body.not-found-page){min-height:100svh;overflow-x:hidden;background:radial-gradient(circle at 22% 12%,rgba(255,255,255,.96),transparent 32rem),radial-gradient(circle at 86% 78%,rgba(139,103,72,.13),transparent 28rem),linear-gradient(135deg,#fbf7ef 0%,#f2e8da 58%,#e4d3bd 100%)}
+  :global(body.not-found-page .app-shell){min-height:100svh}
+  .not-found{position:relative;display:grid;place-items:center;min-height:100svh;padding:clamp(1.25rem,4vw,3rem);isolation:isolate}
+  .not-found__glow{position:absolute;inset:8% 12%;z-index:-1;background:radial-gradient(ellipse,rgba(255,255,255,.72),transparent 68%);filter:blur(12px)}
+  :global(.not-found__paper){position:relative;width:min(100%,760px);padding:clamp(3rem,8vw,6.5rem) clamp(1.5rem,7vw,5.8rem) clamp(2.2rem,6vw,4rem);border:1px solid rgba(89,66,48,.18);border-radius:26px;background:linear-gradient(145deg,rgba(255,253,248,.95),rgba(249,242,231,.9));box-shadow:0 28px 80px rgba(68,45,27,.14),inset 0 1px 0 rgba(255,255,255,.9);text-align:center;overflow:hidden}
+  :global(.not-found__paper)::before,:global(.not-found__paper)::after{content:"";position:absolute;width:180px;height:280px;border:1px solid rgba(128,102,79,.09);border-radius:50%;transform:rotate(32deg);pointer-events:none}
+  :global(.not-found__paper)::before{left:-115px;top:-100px}:global(.not-found__paper)::after{right:-125px;bottom:-150px;transform:rotate(-24deg)}
+  .not-found__number{margin:0;color:rgba(111,82,59,.13);font-family:var(--font-heading);font-size:clamp(6rem,18vw,10.5rem);font-weight:600;line-height:.72;letter-spacing:-.07em}
+  .not-found__ornament{display:flex;align-items:center;justify-content:center;gap:.8rem;margin:1.8rem auto 1.5rem;color:var(--accent)}
+  .not-found__ornament span{width:42px;height:1px;background:var(--line)}.not-found__ornament b{font-size:.72rem;font-weight:400}
+  :global(.not-found__eyebrow){margin:0;color:var(--accent);font-size:.68rem;letter-spacing:.22em;text-transform:uppercase}
+  :global(.not-found__title){margin:.8rem 0 0;font-family:var(--font-heading);font-size:clamp(2.4rem,6vw,4.35rem);font-weight:500;line-height:1;letter-spacing:-.035em}
+  :global(.not-found__text){margin:1.35rem 0 0;color:var(--muted);font-family:var(--font-heading);font-size:clamp(1rem,2.2vw,1.18rem);line-height:1.65}
+  .not-found__actions{display:flex;justify-content:center;gap:.8rem;margin-top:2.2rem}
+  .not-found__button{display:inline-flex;align-items:center;justify-content:space-between;gap:1.75rem;min-width:205px;padding:1rem 1.2rem;border:1px solid var(--accent);background:rgba(255,252,246,.44);font-size:.84rem;transition:transform var(--transition-normal),background var(--transition-fast),box-shadow var(--transition-normal)}
+  .not-found__button--primary{background:linear-gradient(135deg,#947153,#76573f);color:#fff9ef;box-shadow:0 14px 30px rgba(67,45,29,.16)}
+  .not-found__button:hover{transform:translateY(-2px);background:rgba(255,252,246,.85);box-shadow:0 18px 34px rgba(67,45,29,.13)}
+  .not-found__button--primary:hover{background:linear-gradient(135deg,#9b7758,#76573f)}
+  :global(.not-found__footer){margin:2.5rem 0 0;color:rgba(94,75,60,.62);font-family:var(--font-heading);font-size:.8rem}
+  @media(max-width:620px){.not-found{padding:1rem}:global(.not-found__paper){border-radius:20px;padding:3.2rem 1.2rem 2.3rem}:global(.not-found__text br){display:none}.not-found__actions{display:grid}.not-found__button{width:100%;min-width:0}:global(.not-found__footer){margin-top:2rem}}
+</style>

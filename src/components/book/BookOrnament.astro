@@ -1,0 +1,19 @@
+---
+interface Props {
+  class?: string;
+  symbol?: string;
+  label?: string;
+}
+
+const {
+  class: className = "book-ornament",
+  symbol = "✦",
+  label,
+} = Astro.props;
+---
+
+<div class={className} aria-hidden={label ? undefined : "true"} aria-label={label}>
+  <span></span>
+  <b>{symbol}</b>
+  <span></span>
+</div>

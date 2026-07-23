@@ -1,0 +1,60 @@
+---
+interface Props {
+  backHref?: string;
+  backLabel?: string;
+  sectionLabel?: string;
+}
+
+const {
+  backHref = "/book",
+  backLabel = "← Вернуться в дневник",
+  sectionLabel = "Личный дневник",
+} = Astro.props;
+---
+
+<header class="reading__header">
+  <a class="reading__back" href={backHref}>
+    {backLabel}
+  </a>
+
+  <p class="reading__label">{sectionLabel}</p>
+</header>
+
+<style>
+  .reading__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .reading__back {
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 180ms ease;
+  }
+
+  .reading__back:hover {
+    color: var(--ink);
+  }
+
+  .reading__label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 560px) {
+    .reading__header {
+      align-items: flex-start;
+    }
+
+    .reading__label {
+      text-align: right;
+    }
+  }
+</style>

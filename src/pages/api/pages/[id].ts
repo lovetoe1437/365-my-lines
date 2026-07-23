@@ -35,21 +35,30 @@ export const PUT: APIRoute = async ({ request, params }) => {
 
     const title = String(formData.get("title") ?? "").trim();
     const content = String(formData.get("content") ?? "").trim();
+    const entryDate = String(formData.get("entryDate") ?? "").trim();
 
-    if (!title || !content) {
+    if (!title || !content || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)) {
       return Response.json(
         {
           ok: false,
-          message: "Заполни название и текст записи.",
+          message: "Заполни дату, название и текст записи.",
         },
         { status: 400 },
       );
     }
 
-    await updatePage(env.DB, id, {
+    const updated = await updatePage(env.DB, id, {
       title,
       content,
+      entryDate,
     });
+
+    if (!updated) {
+      return Response.json(
+        { ok: false, message: "Запись не найдена. Возможно, она уже была удалена." },
+        { status: 404 },
+      );
+    }
 
     return Response.json({
       ok: true,
@@ -82,7 +91,14 @@ export const DELETE: APIRoute = async ({ params }) => {
       );
     }
 
-    await deletePage(env.DB, id);
+    const deleted = await deletePage(env.DB, id);
+
+    if (!deleted) {
+      return Response.json(
+        { ok: false, message: "Запись уже удалена или не существует." },
+        { status: 404 },
+      );
+    }
 
     return Response.json({
       ok: true,

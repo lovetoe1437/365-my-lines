@@ -1,0 +1,19 @@
+---
+interface Props {
+  as?: "p" | "span" | "div" | "small";
+  size?: "sm" | "md" | "lg";
+  tone?: "default" | "muted" | "soft" | "accent";
+  align?: "start" | "center" | "end";
+  class?: string;
+}
+
+const {
+  as: Tag = "p",
+  size = "md",
+  tone = "default",
+  align = "start",
+  class: className = "",
+} = Astro.props;
+---
+
+<Tag class:list={["ds-text", `ds-text--${size}`, `ds-text--${tone}`, `ds-text--${align}`, className]}><slot /></Tag>

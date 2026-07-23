@@ -1,26 +1,39 @@
-﻿import { defineMiddleware } from "astro:middleware";
+import { defineMiddleware } from "astro:middleware";
 import { isAdmin } from "./lib/auth/session";
 
-const PROTECTED_ROUTES = ["/dashboard", "/write", "/edit"];
+const PROTECTED_ROUTES = [
+  "/lines/write",
+  "/diary/write",
+  "/write",
+  "/api/pages",
+  "/api/lines",
+  "/api/unspoken",
+  "/unspoken/edit",
+];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = context.url.pathname;
+  const isEditRoute = /^\/lines\/d-\d+\/edit\/?$/.test(pathname) || /^\/pages\/\d+\/edit\/?$/.test(pathname);
+  const isProtectedRoute = isEditRoute || PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  if (!isProtectedRoute) return next();
 
-  console.log("[middleware]", pathname);
+  if (!(await isAdmin(context))) {
+    if (pathname.startsWith("/api/")) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          message: "Сессия завершилась. Войдите снова.",
+        }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-store",
+          },
+        },
+      );
+    }
 
-  const isProtectedRoute = PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  if (!isProtectedRoute) {
-    return next();
-  }
-
-  const authenticated = await isAdmin(context);
-
-  console.log("[middleware] admin:", authenticated);
-
-  if (!authenticated) {
     return context.redirect("/login", 302);
   }
 

@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+  cancelHref: string;
+  cancelLabel?: string;
+  saveLabel: string;
+  saveButtonId?: string;
+}
+
+const {
+  class: className = "editor-actions",
+  cancelHref,
+  cancelLabel = "Отмена",
+  saveLabel,
+  saveButtonId = "save-button",
+} = Astro.props;
+---
+
+<div class={className}>
+  <a href={cancelHref}>{cancelLabel}</a>
+  <button id={saveButtonId} type="submit">{saveLabel}</button>
+</div>

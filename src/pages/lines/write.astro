@@ -1,0 +1,80 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import BookOrnament from "../../components/book/BookOrnament.astro";
+import EditorActions from "../../components/editor/EditorActions.astro";
+import EditorMeta from "../../components/editor/EditorMeta.astro";
+import { getCollection } from "astro:content";
+import { env } from "cloudflare:workers";
+import { getBookLines } from "../../lib/db/book-lines";
+import "../../styles/editor.css";
+
+export const prerender = false;
+
+const staticLines = await getCollection("lines");
+const dynamicLines = await getBookLines(env.DB);
+const nextNumber = Math.min(
+  365,
+  Math.max(0, ...staticLines.map((line) => line.data.number), ...dynamicLines.map((line) => line.number)) + 1,
+);
+const isoToday = new Date().toISOString().slice(0, 10);
+---
+
+<AppLayout title="Новая строка" class="book-editor-page">
+  <main class="editor-shell">
+    <a class="editor-back" href="/lines">← Вернуться в книгу</a>
+
+    <form class="paper" id="entry-form" novalidate>
+      <header class="paper__header">
+        <label>
+          СТРОКА
+          <input id="number" name="number" type="number" min="1" max="365" value={nextNumber} required />
+        </label>
+        <input class="paper__date" id="lineDate" name="lineDate" type="date" value={isoToday} required />
+      </header>
+
+      <input
+        class="paper__title"
+        id="title"
+        name="title"
+        placeholder="Название страницы"
+        maxlength="160"
+        required
+      />
+
+      <BookOrnament class="paper__ornament" />
+
+      <textarea
+        class="paper__content"
+        id="content"
+        name="content"
+        placeholder="Сегодня достаточно одной строки…"
+        required
+      ></textarea>
+
+      <EditorMeta class="paper__footer" />
+
+      <p class="paper__message" id="form-message" aria-live="polite"></p>
+
+      <EditorActions
+        cancelHref="/lines"
+        saveLabel="Сохранить страницу"
+      />
+    </form>
+  </main>
+</AppLayout>
+
+<script>
+  import { initEditor } from "../../lib/editor/createEditor";
+  import { bookSavedMessages, bookWritingPrompts } from "../../lib/editor/messages";
+
+  initEditor({
+    storageKey: "365-my-lines:new-book-line",
+    endpoint: "/api/lines",
+    redirectTo: (id) => `/lines/d-${id}`,
+    idleButtonLabel: "Сохранить страницу",
+    savedButtonLabel: "Страница сохранена",
+    promptMessages: bookWritingPrompts,
+    successMessages: bookSavedMessages,
+    minimumTextareaHeight: 360,
+  });
+</script>

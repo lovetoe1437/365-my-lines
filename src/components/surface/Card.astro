@@ -1,0 +1,21 @@
+---
+interface Props {
+  as?: "div" | "section" | "article" | "li";
+  variant?: "plain" | "outlined" | "soft";
+  interactive?: boolean;
+  padding?: "sm" | "md" | "lg";
+  class?: string;
+}
+
+const {
+  as: Tag = "article",
+  variant = "plain",
+  interactive = false,
+  padding = "md",
+  class: className = "",
+} = Astro.props;
+---
+
+<Tag class:list={["ds-card", `ds-card--${variant}`, `ds-card--padding-${padding}`, { "ds-card--interactive": interactive }, className]}>
+  <slot />
+</Tag>

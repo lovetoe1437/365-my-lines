@@ -1,0 +1,105 @@
+<dialog id="app-dialog" class="app-dialog" aria-labelledby="app-dialog-title">
+  <div class="app-dialog__frame" aria-hidden="true"></div>
+  <button id="app-dialog-close" class="app-dialog__close" type="button" aria-label="Закрыть окно">×</button>
+
+  <div class="app-dialog__content">
+    <span class="app-dialog__ornament" aria-hidden="true">✦</span>
+    <p id="app-dialog-eyebrow" class="app-dialog__eyebrow">Сообщение</p>
+    <h2 id="app-dialog-title">Что-то произошло</h2>
+    <div class="app-dialog__divider" aria-hidden="true"><span></span><b>✦</b><span></span></div>
+    <p id="app-dialog-message" class="app-dialog__message"></p>
+    <div class="app-dialog__actions">
+      <button id="app-dialog-secondary" class="app-dialog__button app-dialog__button--secondary" type="button" hidden>Закрыть</button>
+      <button id="app-dialog-primary" class="app-dialog__button app-dialog__button--primary" type="button">Понятно</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById("app-dialog");
+  const closeButton = document.getElementById("app-dialog-close");
+  const eyebrow = document.getElementById("app-dialog-eyebrow");
+  const title = document.getElementById("app-dialog-title");
+  const message = document.getElementById("app-dialog-message");
+  const primary = document.getElementById("app-dialog-primary");
+  const secondary = document.getElementById("app-dialog-secondary");
+
+  let primaryHref = "";
+  let secondaryHref = "";
+
+  const closeDialog = () => {
+    if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close();
+  };
+
+  const navigate = (href) => {
+    if (href) window.location.href = href;
+    else closeDialog();
+  };
+
+  window.showAppDialog = (options = {}) => {
+    if (!(dialog instanceof HTMLDialogElement)) return;
+
+    if (eyebrow) eyebrow.textContent = options.eyebrow || "Сообщение";
+    if (title) title.textContent = options.title || "Что-то произошло";
+    if (message) message.textContent = options.message || "Попробуй ещё раз.";
+
+    primaryHref = options.actionHref || "";
+    secondaryHref = options.secondaryHref || "";
+
+    if (primary instanceof HTMLButtonElement) {
+      primary.textContent = options.actionLabel || "Понятно";
+      primary.classList.toggle("app-dialog__button--danger", options.tone === "danger");
+    }
+
+    if (secondary instanceof HTMLButtonElement) {
+      const showSecondary = Boolean(options.secondaryLabel);
+      secondary.hidden = !showSecondary;
+      secondary.textContent = options.secondaryLabel || "Закрыть";
+    }
+
+    if (!dialog.open) dialog.showModal();
+    window.setTimeout(() => primary?.focus(), 40);
+  };
+
+  primary?.addEventListener("click", () => navigate(primaryHref));
+  secondary?.addEventListener("click", () => navigate(secondaryHref));
+  closeButton?.addEventListener("click", closeDialog);
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) closeDialog();
+  });
+</script>
+
+<style>
+  .app-dialog {
+    width: min(calc(100% - 2rem), 540px);
+    padding: 0;
+    overflow: visible;
+    border: 1px solid rgba(58, 47, 36, 0.22);
+    border-radius: 18px;
+    background: #fbf8f2;
+    color: #29241e;
+    box-shadow: 0 30px 100px rgba(30, 23, 17, 0.28);
+  }
+  .app-dialog::backdrop { background: rgba(35, 28, 22, 0.52); backdrop-filter: blur(5px); }
+  .app-dialog__frame { position:absolute; inset:9px; pointer-events:none; border:1px solid rgba(58,47,36,.18); border-radius:12px; }
+  .app-dialog__close { position:absolute; z-index:2; top:18px; right:20px; width:36px; height:36px; border:0; background:transparent; color:#29241e; font:400 1.55rem/1 serif; cursor:pointer; }
+  .app-dialog__content { position:relative; padding:3.2rem 3rem 2.8rem; text-align:center; }
+  .app-dialog__ornament { display:block; margin-bottom:1.15rem; color:#9a795a; font-size:.8rem; }
+  .app-dialog__eyebrow { margin:0 0 .8rem; color:#8b6b50; font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; }
+  .app-dialog h2 { margin:0; font-family:"Cormorant Garamond",serif; font-size:clamp(2.5rem,8vw,3.8rem); line-height:1; font-weight:500; }
+  .app-dialog__divider { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:.8rem; width:min(100%,220px); margin:1.65rem auto; color:#9a795a; }
+  .app-dialog__divider span { height:1px; background:rgba(58,47,36,.25); }
+  .app-dialog__divider b { font-size:.65rem; font-weight:400; }
+  .app-dialog__message { max-width:410px; margin:0 auto; white-space:pre-line; color:#766c60; font-family:"Literata",serif; font-size:1rem; line-height:1.75; }
+  .app-dialog__actions { display:flex; justify-content:center; gap:.8rem; margin-top:2.15rem; }
+  .app-dialog__button { min-width:150px; padding:.9rem 1.25rem; border:1px solid rgba(58,47,36,.26); font:600 1rem "Literata",serif; cursor:pointer; transition:transform 180ms ease, box-shadow 180ms ease; }
+  .app-dialog__button:hover { transform:translateY(-1px); }
+  .app-dialog__button--primary { border-color:#80664f; background:#80664f; color:#fbf8f2; box-shadow:0 12px 26px rgba(80,58,39,.14); }
+  .app-dialog__button--secondary { background:transparent; color:#29241e; }
+  .app-dialog__button--danger { border-color:#ae3935; background:#ae3935; }
+  @media (max-width:560px) {
+    .app-dialog__content { padding:2.8rem 1.45rem 1.8rem; }
+    .app-dialog__actions { flex-direction:column-reverse; }
+    .app-dialog__button { width:100%; }
+  }
+</style>

@@ -1,0 +1,15 @@
+---
+interface Props {
+  orientation?: "horizontal" | "vertical";
+  strength?: "soft" | "strong";
+  class?: string;
+}
+
+const {
+  orientation = "horizontal",
+  strength = "soft",
+  class: className = "",
+} = Astro.props;
+---
+
+<div class:list={["ds-divider", `ds-divider--${orientation}`, `ds-divider--${strength}`, className]} role="separator" aria-orientation={orientation}></div>
