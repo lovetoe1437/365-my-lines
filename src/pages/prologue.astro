@@ -1,0 +1,597 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+---
+
+<AppLayout
+  title="Перед тем, как ты откроешь эту книгу"
+  description="Личное письмо перед началом книги."
+  class="prologue-page"
+  hideNavigation
+  noindex
+>
+  <article class="prologue" data-prologue>
+    <section class="prologue__panel prologue__letter" data-letter aria-labelledby="prologue-title">
+      <div class="prologue__letter-inner">
+        <svg class="prologue__corner-heart" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 52C26 46 13 37 13 24.5 13 17 17.5 12 23.5 12c4.2 0 7.2 2.5 8.5 6 1.4-3.5 4.7-6 8.8-6C47 12 51 17.1 51 24.2 51 35.4 40.7 44.7 32 52Z"></path>
+        </svg>
+
+        <h1 id="prologue-title" tabindex="-1">
+          <span>Перед тем,</span>
+          <span>как ты откроешь</span>
+          <span>эту книгу…</span>
+        </h1>
+
+        <div class="prologue__divider" aria-hidden="true">
+          <span></span><b>✦</b><span></span>
+        </div>
+
+        <div class="prologue__copy">
+          <p>Я хочу, чтобы ты прочитала<br />эти несколько строк.</p>
+
+          <p>
+            Эта книга — не просто страницы.<br />
+            В ней есть мысли, чувства и слова,<br />
+            которые я долго хранил.
+          </p>
+
+          <p>
+            Просто прочти это.<br />
+            А потом открой книгу.<br />
+            Не спеши. Страница за страницей.
+          </p>
+
+          <p>
+            А когда дойдёшь до того места,<br />
+            где захочется остановиться —<br />
+            пусть эта книга останется с тобой.
+          </p>
+        </div>
+
+        <svg class="prologue__signature" viewBox="0 0 230 86" role="img" aria-label="Для тебя">
+          <text x="12" y="53">Для тебя</text>
+          <path d="M18 69c47-12 105-17 190-15"></path>
+        </svg>
+
+        <button class="prologue__continue" type="button" data-continue>
+          <svg viewBox="0 0 42 42" aria-hidden="true">
+            <path d="M21 34C17 30 8 24 8 15.5 8 10.8 11 8 14.6 8c2.8 0 5.1 1.7 6.4 4.6C22.3 9.7 24.7 8 27.5 8 31.2 8 34 11 34 15.5 34 23.2 27.3 29.2 21 34Z"></path>
+          </svg>
+          <span>Продолжить</span>
+          <b aria-hidden="true">→</b>
+        </button>
+      </div>
+    </section>
+
+    <section class="prologue__panel prologue__afterword" data-afterword aria-label="Продолжение письма" hidden>
+      <div class="prologue__afterword-inner">
+        <button class="prologue__back" type="button" data-back aria-label="Вернуться к письму">
+          <span aria-hidden="true">←</span>
+        </button>
+
+        <div class="prologue__afterword-ornament" aria-hidden="true">
+          <svg class="prologue__afterword-heart" viewBox="0 0 64 64">
+            <path d="M32 53C25 46 12 36.5 12 23.5 12 16.3 16.5 11 23 11c4.3 0 7.6 2.6 9 6.3C33.5 13.6 36.8 11 41 11c6.4 0 11 5.3 11 12.5C52 35.6 41.6 45.5 32 53Z"></path>
+          </svg>
+          <div class="prologue__branches">
+            <span></span>
+            <svg viewBox="0 0 150 42">
+              <path d="M73 34C54 32 37 24 18 8M77 34c19-2 36-10 55-26"></path>
+              <ellipse cx="29" cy="13" rx="3.2" ry="7" transform="rotate(-48 29 13)"></ellipse>
+              <ellipse cx="40" cy="20" rx="3.2" ry="7" transform="rotate(-58 40 20)"></ellipse>
+              <ellipse cx="52" cy="26" rx="3.1" ry="6.5" transform="rotate(-67 52 26)"></ellipse>
+              <ellipse cx="22" cy="19" rx="3" ry="6.5" transform="rotate(-18 22 19)"></ellipse>
+              <ellipse cx="35" cy="26" rx="3" ry="6.5" transform="rotate(-25 35 26)"></ellipse>
+              <ellipse cx="121" cy="13" rx="3.2" ry="7" transform="rotate(48 121 13)"></ellipse>
+              <ellipse cx="110" cy="20" rx="3.2" ry="7" transform="rotate(58 110 20)"></ellipse>
+              <ellipse cx="98" cy="26" rx="3.1" ry="6.5" transform="rotate(67 98 26)"></ellipse>
+              <ellipse cx="128" cy="19" rx="3" ry="6.5" transform="rotate(18 128 19)"></ellipse>
+              <ellipse cx="115" cy="26" rx="3" ry="6.5" transform="rotate(25 115 26)"></ellipse>
+              <path class="prologue__branch-star" d="M75 28l3.2 4.2L75 36.5l-3.2-4.3Z"></path>
+            </svg>
+            <span></span>
+          </div>
+        </div>
+
+        <div class="prologue__afterword-copy">
+          <p data-afterword-start tabindex="-1">
+            Возможно,<br />
+            во время чтения тебе покажется,<br />
+            что каких-то историй здесь не хватает.<br />
+            Что некоторые воспоминания остались<br />
+            только в нашей памяти.
+          </p>
+
+          <i aria-hidden="true">✦</i>
+
+          <p>
+            Где-то мне стоило написать больше.<br />
+            А где-то — подобрать совсем другие слова.
+          </p>
+
+          <i aria-hidden="true">✦</i>
+
+          <p>
+            Ты будешь права.<br />
+            И я хочу, чтобы ты это знала заранее.
+          </p>
+
+          <i aria-hidden="true">✦</i>
+
+          <p>
+            Эта книга — не попытка рассказать<br />
+            абсолютно всё.<br />
+            Она лишь часть того, что я долго<br />
+            носил в себе.
+          </p>
+
+          <i aria-hidden="true">✦</i>
+
+          <p>
+            И если после прочтения у тебя останется<br />
+            ощущение, что я сказал не всё…<br />
+            Наверное, так и должно быть.
+          </p>
+        </div>
+
+        <div class="prologue__closing-branch" aria-hidden="true">
+          <b>✦</b>
+          <svg viewBox="0 0 116 45">
+            <path d="M8 8c25 24 58 30 99 27M28 23c-8 0-14-3-20-9M43 30c-9 1-16-1-23-7M59 34c-7 4-14 4-21 2M34 25c-2-8-1-14 2-20M50 31c1-8 4-13 9-18M68 35c3-7 7-11 13-14M84 36c4-5 9-8 15-9"></path>
+          </svg>
+        </div>
+
+        <h2>
+          Наверное, есть вещи и слова,<br />
+          для которых всегда будет мало любых страниц.
+        </h2>
+      </div>
+    </section>
+  </article>
+</AppLayout>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-prologue]");
+  const letter = document.querySelector<HTMLElement>("[data-letter]");
+  const afterword = document.querySelector<HTMLElement>("[data-afterword]");
+  const continueButton = document.querySelector<HTMLButtonElement>("[data-continue]");
+  const backButton = document.querySelector<HTMLButtonElement>("[data-back]");
+  const letterTitle = document.querySelector<HTMLElement>("#prologue-title");
+  const afterwordStart = document.querySelector<HTMLElement>("[data-afterword-start]");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  continueButton?.addEventListener("click", () => {
+    if (!root || !letter || !afterword || !afterwordStart) return;
+
+    continueButton.disabled = true;
+    root.classList.add("is-changing");
+
+    window.setTimeout(() => {
+      letter.hidden = true;
+      afterword.hidden = false;
+      window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+
+      requestAnimationFrame(() => {
+        root.classList.remove("is-changing");
+        afterword.classList.add("is-visible");
+        afterwordStart.focus({ preventScroll: true });
+      });
+    }, reducedMotion.matches ? 0 : 260);
+  });
+
+  backButton?.addEventListener("click", () => {
+    if (!root || !letter || !afterword || !letterTitle || !continueButton) return;
+
+    root.classList.add("is-changing");
+
+    window.setTimeout(() => {
+      afterword.classList.remove("is-visible");
+      afterword.hidden = true;
+      letter.hidden = false;
+      continueButton.disabled = false;
+      window.scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
+
+      requestAnimationFrame(() => {
+        root.classList.remove("is-changing");
+        letterTitle.focus({ preventScroll: true });
+      });
+    }, reducedMotion.matches ? 0 : 260);
+  });
+</script>
+
+<style>
+  :global(body.prologue-page) {
+    background:
+      radial-gradient(circle at 18% 4%, rgba(255,255,255,.82), transparent 30rem),
+      linear-gradient(145deg, #eadfce, var(--paper) 58%, #dccbb5);
+  }
+
+  :global(body.prologue-page)::before {
+    z-index: 0;
+  }
+
+  :global(body.prologue-page .app-shell) {
+    position: relative;
+    min-height: 100svh;
+  }
+
+  .prologue {
+    position: relative;
+    z-index: 1;
+    min-height: 100svh;
+    color: var(--ink-strong);
+  }
+
+  .prologue__panel {
+    width: min(100%, 48rem);
+    min-height: 100svh;
+    margin: 0 auto;
+    background:
+      linear-gradient(rgba(255,252,245,.76), rgba(255,252,245,.76)),
+      repeating-radial-gradient(circle at 25% 30%, rgba(91,64,39,.035) 0 .7px, transparent .8px 4px),
+      var(--paper-light);
+    box-shadow: var(--reading-shadow), var(--reading-inner-shadow);
+    transition: opacity var(--duration-normal) ease, transform var(--duration-normal) ease;
+  }
+
+  .prologue.is-changing .prologue__panel {
+    opacity: 0;
+    transform: translateY(-.5rem);
+  }
+
+  .prologue__letter-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 31rem);
+    min-height: 100svh;
+    margin: 0 auto;
+    padding:
+      max(4.8rem, calc(env(safe-area-inset-top) + 3.5rem))
+      clamp(2.2rem, 11vw, 3.4rem)
+      max(1.7rem, calc(env(safe-area-inset-bottom) + 1rem));
+  }
+
+  .prologue__corner-heart {
+    position: absolute;
+    top: max(2.2rem, calc(env(safe-area-inset-top) + 1rem));
+    right: clamp(2.2rem, 11vw, 3.4rem);
+    width: 2.7rem;
+    overflow: visible;
+    transform: rotate(9deg);
+  }
+
+  .prologue__corner-heart path,
+  .prologue__continue path,
+  .prologue__afterword-heart path,
+  .prologue__branches path,
+  .prologue__closing-branch path {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .prologue__corner-heart path {
+    stroke-width: 2.2;
+  }
+
+  .prologue__letter h1 {
+    margin: 0;
+    font-size: clamp(2.25rem, 9.5vw, 3.1rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -.025em;
+    outline: 0;
+  }
+
+  .prologue__letter h1 span {
+    display: block;
+  }
+
+  .prologue__divider {
+    display: grid;
+    grid-template-columns: 4rem auto 4rem;
+    align-items: center;
+    gap: 1rem;
+    width: max-content;
+    margin: clamp(2rem, 4vh, 2.35rem) auto;
+    color: var(--accent-dark);
+  }
+
+  .prologue__divider span {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, currentColor);
+    opacity: .72;
+  }
+
+  .prologue__divider span:last-child {
+    background: linear-gradient(90deg, currentColor, transparent);
+  }
+
+  .prologue__divider b {
+    font-size: .75rem;
+    font-weight: 400;
+  }
+
+  .prologue__copy {
+    display: grid;
+    gap: clamp(1.25rem, 2.6vh, 1.55rem);
+    font-size: clamp(.98rem, 3.8vw, 1.08rem);
+  }
+
+  .prologue__copy p {
+    margin: 0;
+    line-height: 1.58;
+  }
+
+  .prologue__signature {
+    align-self: flex-end;
+    width: min(55%, 13rem);
+    margin: clamp(1.1rem, 3vh, 2rem) 0 .9rem;
+    overflow: visible;
+    color: var(--ink);
+    transform: rotate(-7deg);
+  }
+
+  .prologue__signature text {
+    fill: currentColor;
+    font-family: "Snell Roundhand", "Segoe Script", cursive;
+    font-size: 43px;
+    font-style: italic;
+  }
+
+  .prologue__signature path {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.3;
+  }
+
+  .prologue__continue {
+    display: grid;
+    grid-template-columns: 2rem 1fr 2rem;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    min-height: 4.35rem;
+    margin-top: auto;
+    padding: .85rem 1.4rem;
+    border: 1px solid var(--ink-strong);
+    border-radius: .75rem;
+    background: var(--ink-strong);
+    color: var(--paper-light);
+    box-shadow: 0 12px 28px rgba(36,29,23,.18);
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+
+  .prologue__continue:hover {
+    background: #34291f;
+    transform: translateY(-1px);
+  }
+
+  .prologue__continue:active {
+    transform: translateY(1px);
+  }
+
+  .prologue__continue:disabled {
+    cursor: default;
+  }
+
+  .prologue__continue svg {
+    width: 1.9rem;
+  }
+
+  .prologue__continue path {
+    stroke-width: 1.7;
+  }
+
+  .prologue__continue b {
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+
+  .prologue__afterword {
+    opacity: 0;
+    text-align: center;
+  }
+
+  .prologue__afterword.is-visible {
+    opacity: 1;
+  }
+
+  .prologue__afterword-inner {
+    position: relative;
+    width: min(100%, 40rem);
+    min-height: 100svh;
+    margin: 0 auto;
+    padding:
+      max(2.6rem, calc(env(safe-area-inset-top) + 1.6rem))
+      clamp(1.25rem, 5.5vw, 3.3rem)
+      max(2.2rem, calc(env(safe-area-inset-bottom) + 1.2rem));
+  }
+
+  .prologue__back {
+    position: absolute;
+    top: max(1.3rem, calc(env(safe-area-inset-top) + .7rem));
+    left: clamp(1.25rem, 5.5vw, 3.3rem);
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    color: var(--accent-dark);
+    font-family: var(--font-heading);
+    font-size: 1.9rem;
+    line-height: 1;
+    opacity: .72;
+    transition: opacity var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+  }
+
+  .prologue__back:hover {
+    background: rgba(101,75,56,.07);
+    opacity: 1;
+    transform: translateX(-2px);
+  }
+
+  .prologue__back:active {
+    transform: translateX(-3px);
+  }
+
+  .prologue__afterword-ornament {
+    display: grid;
+    justify-items: center;
+    color: var(--accent-dark);
+  }
+
+  .prologue__afterword-heart {
+    width: 3.4rem;
+    margin-bottom: .55rem;
+  }
+
+  .prologue__afterword-heart path {
+    stroke-width: 2;
+  }
+
+  .prologue__branches {
+    display: grid;
+    grid-template-columns: minmax(2rem, 4.5rem) minmax(8rem, 11rem) minmax(2rem, 4.5rem);
+    align-items: center;
+    gap: .55rem;
+  }
+
+  .prologue__branches > span {
+    height: 1px;
+    background: currentColor;
+    opacity: .55;
+  }
+
+  .prologue__branches svg {
+    width: 100%;
+  }
+
+  .prologue__branches path,
+  .prologue__closing-branch path {
+    stroke-width: 1.25;
+  }
+
+  .prologue__branches ellipse {
+    fill: currentColor;
+    opacity: .72;
+  }
+
+  .prologue__branches .prologue__branch-star {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .prologue__closing-branch b {
+    font-size: .7rem;
+    font-weight: 400;
+  }
+
+  .prologue__afterword-copy {
+    display: grid;
+    justify-items: center;
+    gap: clamp(.65rem, 2vh, 1.05rem);
+    margin-top: clamp(1.35rem, 3vh, 2.2rem);
+    font-family: var(--font-heading);
+    font-size: clamp(1.08rem, 4.25vw, 1.34rem);
+  }
+
+  .prologue__afterword-copy p {
+    margin: 0;
+    line-height: 1.42;
+  }
+
+  .prologue__afterword-copy p:focus {
+    outline: 0;
+  }
+
+  .prologue__afterword-copy i {
+    color: var(--accent-dark);
+    font-size: .68rem;
+    font-style: normal;
+  }
+
+  .prologue__closing-branch {
+    display: grid;
+    justify-items: center;
+    gap: .25rem;
+    width: 7rem;
+    margin: clamp(.85rem, 2vh, 1.3rem) auto .8rem;
+    color: var(--accent-dark);
+  }
+
+  .prologue__closing-branch svg {
+    width: 100%;
+  }
+
+  .prologue__afterword h2 {
+    margin: 0;
+    color: var(--accent-dark);
+    font-size: clamp(1.25rem, 4.8vw, 1.65rem);
+    font-weight: 500;
+    line-height: 1.35;
+    outline: 0;
+  }
+
+  @media (min-width: 49rem) {
+    .prologue {
+      padding: 2rem;
+    }
+
+    .prologue__panel {
+      min-height: calc(100svh - 4rem);
+      border: 1px solid rgba(83,61,44,.13);
+      border-radius: 1.5rem;
+      overflow: hidden;
+    }
+
+    .prologue__letter-inner,
+    .prologue__afterword-inner {
+      min-height: calc(100svh - 4rem);
+    }
+  }
+
+  @media (max-width: 23.5rem) {
+    .prologue__letter-inner {
+      padding-inline: 1.75rem;
+    }
+
+    .prologue__letter h1 {
+      font-size: 2.25rem;
+    }
+
+    .prologue__copy {
+      font-size: .95rem;
+    }
+
+    .prologue__afterword-copy {
+      font-size: 1.02rem;
+    }
+  }
+
+  @media (max-height: 48rem) {
+    .prologue__letter-inner {
+      padding-top: max(4.2rem, calc(env(safe-area-inset-top) + 3rem));
+    }
+
+    .prologue__divider {
+      margin-block: 1.8rem;
+    }
+
+    .prologue__copy {
+      gap: 1.25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prologue__panel,
+    .prologue__continue {
+      transition: none;
+    }
+  }
+</style>

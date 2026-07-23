@@ -10,6 +10,7 @@ export const GET: APIRoute = ({ site, url }) => {
     "Disallow: /write",
     "Disallow: /diary/write",
     "Disallow: /pages/*/edit",
+    "Disallow: /prologue",
     `Sitemap: ${origin}/sitemap.xml`,
     "",
   ].join("\n");
