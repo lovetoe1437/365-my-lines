@@ -23,7 +23,7 @@ const readingUrl = `/lines/${String(line.number).padStart(3, "0")}`;
 ---
 
 <AppLayout title={`Изменить — ${line.title}`} class="book-editor-page">
-  <main class="editor-shell" data-book-line-editor data-line-id={id} data-reading-url={readingUrl}>
+  <div class="editor-shell" data-book-line-editor data-line-id={id} data-reading-url={readingUrl}>
     <a class="back" href={readingUrl}>← Вернуться к странице</a>
     <BookLineEditorForm
       number={line.number}
@@ -32,7 +32,7 @@ const readingUrl = `/lines/${String(line.number).padStart(3, "0")}`;
       content={line.content}
       readingUrl={readingUrl}
     />
-  </main>
+  </div>
 
   <DeleteConfirmDialog
     title="Удалить эту страницу?"

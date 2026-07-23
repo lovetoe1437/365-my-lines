@@ -1,6 +1,10 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createPage } from "../../lib/db/pages";
+import {
+  isValidEntryDate,
+  isValidEntryTitle,
+} from "../../lib/validation/entries";
 
 export const prerender = false;
 
@@ -12,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
     const content = String(formData.get("content") ?? "").trim();
     const entryDate = String(formData.get("entryDate") ?? "").trim();
 
-    if (!title || !content || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)) {
+    if (!isValidEntryTitle(title) || !content || !isValidEntryDate(entryDate)) {
       return Response.json(
         {
           ok: false,

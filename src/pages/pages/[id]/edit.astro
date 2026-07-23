@@ -21,7 +21,7 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
 ---
 
 <AppLayout title={`Редактирование — ${page.title}`} class="diary-editor-page">
-  <main class="editor-shell">
+  <div class="editor-shell">
     <a class="editor-back" href={`/pages/${page.id}`}>← Вернуться к странице</a>
 
     <form class="paper" id="edit-form" novalidate>
@@ -55,7 +55,7 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
         </div>
       </div>
     </form>
-  </main>
+  </div>
   <DeleteConfirmDialog
     title="Удалить эту запись?"
     message="Она исчезнет из дневника навсегда. Это действие нельзя отменить."

@@ -34,11 +34,11 @@ const nextHref = navigation.next ? `/pages/${navigation.next.id}` : null;
 ---
 
 <AppLayout
-  title={`${page.title} — 365 моих строк`}
+  title={page.title}
   description={page.content.slice(0, 150)}
   class="reading-page"
 >
-  <main class="reading">
+  <div class="reading">
     <DiaryReadingHeader />
 
     <article class="reading__page">
@@ -87,7 +87,7 @@ const nextHref = navigation.next ? `/pages/${navigation.next.id}` : null;
       total={navigation.total}
       indexHref="/book"
     />
-  </main>
+  </div>
 
   <DeleteConfirmDialog
     title="Удалить запись?"

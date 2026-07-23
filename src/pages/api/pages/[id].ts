@@ -4,6 +4,10 @@ import {
   deletePage,
   updatePage,
 } from "../../../lib/db/pages";
+import {
+  isValidEntryDate,
+  isValidEntryTitle,
+} from "../../../lib/validation/entries";
 
 export const prerender = false;
 
@@ -37,7 +41,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
     const content = String(formData.get("content") ?? "").trim();
     const entryDate = String(formData.get("entryDate") ?? "").trim();
 
-    if (!title || !content || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate)) {
+    if (!isValidEntryTitle(title) || !content || !isValidEntryDate(entryDate)) {
       return Response.json(
         {
           ok: false,

@@ -1,6 +1,11 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { createBookLine } from "../../lib/db/book-lines";
+import {
+  isUniqueConstraintError,
+  isValidEntryDate,
+  isValidEntryTitle,
+} from "../../lib/validation/entries";
 
 export const prerender = false;
 
@@ -12,7 +17,14 @@ export const POST: APIRoute = async ({ request }) => {
     const content = String(data.get("content") ?? "").trim();
     const lineDate = String(data.get("lineDate") ?? "").trim();
 
-    if (!Number.isInteger(number) || number < 1 || number > 365 || !title || !content || !lineDate) {
+    if (
+      !Number.isInteger(number) ||
+      number < 1 ||
+      number > 365 ||
+      !isValidEntryTitle(title) ||
+      !content ||
+      !isValidEntryDate(lineDate)
+    ) {
       return Response.json({ ok: false, message: "Заполни номер, дату, название и текст строки." }, { status: 400 });
     }
 
@@ -20,9 +32,16 @@ export const POST: APIRoute = async ({ request }) => {
     return Response.json({ ok: true, id }, { status: 201 });
   } catch (error) {
     console.error("Не удалось сохранить строку:", error);
-    const message = error instanceof Error && error.message.includes("UNIQUE")
-      ? "Строка с таким номером уже существует."
-      : "Не удалось сохранить строку. Попробуй ещё раз.";
-    return Response.json({ ok: false, message }, { status: 500 });
+    if (isUniqueConstraintError(error)) {
+      return Response.json(
+        { ok: false, message: "Строка с таким номером уже существует." },
+        { status: 409 },
+      );
+    }
+
+    return Response.json(
+      { ok: false, message: "Не удалось сохранить строку. Попробуй ещё раз." },
+      { status: 500 },
+    );
   }
 };

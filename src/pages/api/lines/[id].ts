@@ -1,6 +1,11 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { deleteBookLine, updateBookLine } from "../../../lib/db/book-lines";
+import {
+  isUniqueConstraintError,
+  isValidEntryDate,
+  isValidEntryTitle,
+} from "../../../lib/validation/entries";
 
 export const prerender = false;
 const validId = (value: string | undefined) => {
@@ -17,7 +22,14 @@ export const PUT: APIRoute = async ({ request, params }) => {
     const title = String(data.get("title") ?? "").trim();
     const content = String(data.get("content") ?? "").trim();
     const lineDate = String(data.get("lineDate") ?? "").trim();
-    if (!Number.isInteger(number) || number < 1 || number > 365 || !title || !content || !lineDate) {
+    if (
+      !Number.isInteger(number) ||
+      number < 1 ||
+      number > 365 ||
+      !isValidEntryTitle(title) ||
+      !content ||
+      !isValidEntryDate(lineDate)
+    ) {
       return Response.json({ ok: false, message: "Заполни номер, дату, название и текст строки." }, { status: 400 });
     }
     const updated = await updateBookLine(env.DB, id, { number, title, content, lineDate });
@@ -30,6 +42,14 @@ export const PUT: APIRoute = async ({ request, params }) => {
     return Response.json({ ok: true, id });
   } catch (error) {
     console.error("Не удалось обновить строку:", error);
+
+    if (isUniqueConstraintError(error)) {
+      return Response.json(
+        { ok: false, message: "Строка с таким номером уже существует." },
+        { status: 409 },
+      );
+    }
+
     return Response.json({ ok: false, message: "Не удалось сохранить изменения." }, { status: 500 });
   }
 };

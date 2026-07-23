@@ -9,7 +9,7 @@ const isoToday = new Date().toISOString().slice(0, 10);
 ---
 
 <AppLayout title="Новая запись" class="diary-editor-page">
-  <main class="diary-writing">
+  <div class="diary-writing">
     <header class="diary-writing__toolbar">
       <a href="/book">← Вернуться в дневник</a>
       <span class="draft-indicator" id="draft-status" data-state="idle">Черновик готов</span>
@@ -36,7 +36,7 @@ const isoToday = new Date().toISOString().slice(0, 10);
 
       <EditorActions class="actions" cancelHref="/book" saveLabel="Сохранить запись" />
     </form>
-  </main>
+  </div>
 </AppLayout>
 
 <script>

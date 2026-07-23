@@ -20,7 +20,7 @@ const isoToday = new Date().toISOString().slice(0, 10);
 ---
 
 <AppLayout title="Новая строка" class="book-editor-page">
-  <main class="editor-shell">
+  <div class="editor-shell">
     <a class="editor-back" href="/lines">← Вернуться в книгу</a>
 
     <form class="paper" id="entry-form" novalidate>
@@ -60,7 +60,7 @@ const isoToday = new Date().toISOString().slice(0, 10);
         saveLabel="Сохранить страницу"
       />
     </form>
-  </main>
+  </div>
 </AppLayout>
 
 <script>
