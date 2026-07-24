@@ -93,7 +93,10 @@ const label =
 
   .reading-photo__frame {
     position: relative;
+    width: fit-content;
+    max-width: 100%;
     overflow: hidden;
+    margin-inline: auto;
     border: 1px solid rgba(75, 56, 39, 0.13);
     background: rgba(255, 252, 246, 0.38);
     box-shadow:
@@ -111,9 +114,10 @@ const label =
 
   img {
     display: block;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
+    height: auto;
     max-height: min(72svh, 760px);
-    object-fit: contain;
   }
 
   figcaption {
