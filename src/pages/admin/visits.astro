@@ -1,0 +1,537 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+
+export const prerender = false;
+---
+
+<AppLayout
+  title="Посещения"
+  description="История посещений сайта."
+  class="visits-page"
+  hideNavigation
+  noindex
+>
+  <section class="visits" aria-labelledby="visits-title">
+    <a class="visits__back" href="/">← Вернуться к книге</a>
+
+    <header class="visits__header">
+      <div>
+        <p class="visits__eyebrow">Личная книга</p>
+        <h1 id="visits-title">Посещения</h1>
+        <p class="visits__subtitle">История посещений сайта</p>
+      </div>
+
+      <label class="visits__period">
+        <span>Период</span>
+        <select data-period>
+          <option value="today">Сегодня</option>
+          <option value="7d" selected>7 дней</option>
+          <option value="30d">30 дней</option>
+          <option value="all">Всё время</option>
+        </select>
+      </label>
+    </header>
+
+    <div class="visits__ornament" aria-hidden="true">
+      <span></span><b>✦</b><span></span>
+    </div>
+
+    <div class="visits__status" data-status role="status" aria-live="polite">
+      Загружаем историю…
+    </div>
+
+    <div class="visits__content" data-content hidden>
+      <div class="visits__table-wrap">
+        <table class="visits__table">
+          <thead>
+            <tr>
+              <th scope="col">Дата и время</th>
+              <th scope="col">Страна и город</th>
+              <th scope="col">Устройство</th>
+              <th scope="col">Браузер</th>
+              <th scope="col">Страница</th>
+            </tr>
+          </thead>
+          <tbody data-table-body></tbody>
+        </table>
+      </div>
+
+      <div class="visits__cards" data-cards></div>
+
+      <footer class="visits__footer">
+        <p data-summary></p>
+        <nav class="visits__pagination" aria-label="Страницы истории">
+          <button type="button" data-previous aria-label="Предыдущая страница">
+            ←
+          </button>
+          <span data-page-label></span>
+          <button type="button" data-next aria-label="Следующая страница">
+            →
+          </button>
+        </nav>
+      </footer>
+    </div>
+  </section>
+</AppLayout>
+
+<script>
+  type VisitItem = {
+    id: number;
+    visited_at: string;
+    country: string | null;
+    country_code: string | null;
+    city: string | null;
+    device_type: string;
+    device_name: string | null;
+    operating_system: string | null;
+    browser: string | null;
+    path: string;
+  };
+
+  type VisitResponse = {
+    items: VisitItem[];
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    message?: string;
+  };
+
+  const period = document.querySelector<HTMLSelectElement>("[data-period]");
+  const status = document.querySelector<HTMLElement>("[data-status]");
+  const content = document.querySelector<HTMLElement>("[data-content]");
+  const tableBody = document.querySelector<HTMLTableSectionElement>(
+    "[data-table-body]",
+  );
+  const cards = document.querySelector<HTMLElement>("[data-cards]");
+  const summary = document.querySelector<HTMLElement>("[data-summary]");
+  const pageLabel = document.querySelector<HTMLElement>("[data-page-label]");
+  const previous = document.querySelector<HTMLButtonElement>("[data-previous]");
+  const next = document.querySelector<HTMLButtonElement>("[data-next]");
+  let currentPage = 1;
+  let totalPages = 0;
+  let requestNumber = 0;
+
+  const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Berlin",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const formatDate = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Дата неизвестна" : dateFormatter.format(date);
+  };
+
+  const locationText = (item: VisitItem) =>
+    [item.country, item.city].filter(Boolean).join(", ") ||
+    "Местоположение неизвестно";
+
+  const deviceText = (item: VisitItem) =>
+    [item.device_name, item.operating_system].filter(Boolean).join(" · ") ||
+    "Устройство неизвестно";
+
+  const appendTextCell = (row: HTMLTableRowElement, value: string) => {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.append(cell);
+  };
+
+  const renderTableRow = (item: VisitItem) => {
+    const row = document.createElement("tr");
+    appendTextCell(row, formatDate(item.visited_at));
+    appendTextCell(row, locationText(item));
+    appendTextCell(row, deviceText(item));
+    appendTextCell(row, item.browser || "Браузер неизвестен");
+    const pathCell = document.createElement("td");
+    const path = document.createElement("code");
+    path.textContent = item.path;
+    pathCell.append(path);
+    row.append(pathCell);
+    return row;
+  };
+
+  const appendCardField = (
+    card: HTMLElement,
+    label: string,
+    value: string,
+    code = false,
+  ) => {
+    const group = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    if (code) {
+      const path = document.createElement("code");
+      path.textContent = value;
+      description.append(path);
+    } else {
+      description.textContent = value;
+    }
+    group.append(term, description);
+    card.append(group);
+  };
+
+  const renderCard = (item: VisitItem) => {
+    const card = document.createElement("article");
+    card.className = "visits-card";
+    const date = document.createElement("time");
+    date.dateTime = item.visited_at;
+    date.textContent = formatDate(item.visited_at);
+    const details = document.createElement("dl");
+    appendCardField(details, "Место", locationText(item));
+    appendCardField(details, "Устройство", deviceText(item));
+    appendCardField(details, "Браузер", item.browser || "Неизвестен");
+    appendCardField(details, "Страница", item.path, true);
+    card.append(date, details);
+    return card;
+  };
+
+  const setLoading = () => {
+    if (status) {
+      status.hidden = false;
+      status.textContent = "Загружаем историю…";
+    }
+    if (content) content.hidden = true;
+  };
+
+  const showMessage = (message: string) => {
+    if (status) {
+      status.hidden = false;
+      status.textContent = message;
+    }
+    if (content) content.hidden = true;
+  };
+
+  const loadVisits = async () => {
+    const ownRequest = ++requestNumber;
+    setLoading();
+
+    try {
+      const selectedPeriod = period?.value ?? "7d";
+      const response = await fetch(
+        `/api/admin/visits?page=${currentPage}&limit=20&period=${selectedPeriod}`,
+        { headers: { Accept: "application/json" } },
+      );
+      const data = (await response.json()) as VisitResponse;
+      if (ownRequest !== requestNumber) return;
+      if (!response.ok) throw new Error(data.message);
+      if (data.items.length === 0) {
+        showMessage("Посещений пока нет");
+        return;
+      }
+
+      tableBody?.replaceChildren(...data.items.map(renderTableRow));
+      cards?.replaceChildren(...data.items.map(renderCard));
+      totalPages = data.totalPages;
+
+      const firstItem = (data.page - 1) * data.limit + 1;
+      const lastItem = Math.min(data.page * data.limit, data.total);
+      if (summary) {
+        summary.textContent = `Показано ${firstItem}–${lastItem} из ${data.total}`;
+      }
+      if (pageLabel) {
+        pageLabel.textContent = `Страница ${data.page} из ${data.totalPages}`;
+      }
+      if (previous) previous.disabled = data.page <= 1;
+      if (next) next.disabled = data.page >= data.totalPages;
+      if (status) status.hidden = true;
+      if (content) content.hidden = false;
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("period", selectedPeriod);
+      url.searchParams.set("page", String(data.page));
+      history.replaceState(null, "", url);
+    } catch {
+      if (ownRequest === requestNumber) {
+        showMessage("Не удалось загрузить историю посещений");
+      }
+    }
+  };
+
+  const initialUrl = new URL(window.location.href);
+  const initialPeriod = initialUrl.searchParams.get("period");
+  if (period && ["today", "7d", "30d", "all"].includes(initialPeriod ?? "")) {
+    period.value = initialPeriod!;
+  }
+  const initialPage = Number(initialUrl.searchParams.get("page"));
+  if (Number.isSafeInteger(initialPage) && initialPage > 0) {
+    currentPage = initialPage;
+  }
+
+  period?.addEventListener("change", () => {
+    currentPage = 1;
+    void loadVisits();
+  });
+  previous?.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage -= 1;
+      void loadVisits();
+    }
+  });
+  next?.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage += 1;
+      void loadVisits();
+    }
+  });
+
+  void loadVisits();
+</script>
+
+<style is:global>
+  body.visits-page {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,255,255,.82), transparent 35rem),
+      linear-gradient(135deg, var(--paper-light), var(--paper) 62%, #e5d6c1);
+  }
+
+  body.visits-page .app-shell {
+    min-height: 100vh;
+  }
+
+  .visits {
+    width: min(calc(100% - 2rem), 1180px);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) 0 4rem;
+  }
+
+  .visits__back {
+    display: inline-block;
+    margin-bottom: clamp(2.5rem, 6vw, 5rem);
+    color: var(--muted);
+    font-size: .92rem;
+  }
+
+  .visits__back:hover {
+    color: var(--accent);
+  }
+
+  .visits__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .visits__eyebrow,
+  .visits__period span {
+    margin-bottom: .7rem;
+    color: var(--accent);
+    font-size: .7rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+
+  .visits h1 {
+    margin-bottom: .6rem;
+    font-size: clamp(2.7rem, 6vw, 4.8rem);
+  }
+
+  .visits__subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .visits__period {
+    display: grid;
+    min-width: 190px;
+  }
+
+  .visits__period select {
+    min-height: 46px;
+    padding: .7rem 2.4rem .7rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 252, 246, .62);
+  }
+
+  .visits__ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: clamp(2rem, 5vw, 3.5rem) 0;
+    color: var(--accent);
+  }
+
+  .visits__ornament span {
+    width: 56px;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  .visits__ornament b {
+    font-size: .62rem;
+  }
+
+  .visits__status {
+    padding: clamp(3rem, 8vw, 6rem) 1rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .visits__content {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: rgba(255, 252, 246, .54);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .visits__table-wrap {
+    overflow-x: auto;
+  }
+
+  .visits__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .86rem;
+  }
+
+  .visits__table th,
+  .visits__table td {
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .visits__table th {
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .visits code {
+    color: var(--accent-dark);
+    font-family: ui-monospace, "Cascadia Mono", monospace;
+    font-size: .8rem;
+  }
+
+  .visits__cards {
+    display: none;
+  }
+
+  .visits__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    color: var(--muted);
+    font-size: .82rem;
+  }
+
+  .visits__footer p {
+    margin: 0;
+  }
+
+  .visits__pagination {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+  }
+
+  .visits__pagination button {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+  }
+
+  .visits__pagination button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .visits__pagination button:disabled {
+    cursor: default;
+    opacity: .35;
+  }
+
+  @media (max-width: 720px) {
+    .visits {
+      width: min(calc(100% - 1.4rem), 1180px);
+      padding-top: 1.2rem;
+    }
+
+    .visits__back {
+      margin-bottom: 2.5rem;
+    }
+
+    .visits__header {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .visits__period {
+      min-width: 0;
+    }
+
+    .visits__table-wrap {
+      display: none;
+    }
+
+    .visits__cards {
+      display: grid;
+    }
+
+    .visits-card {
+      padding: 1.3rem 1.15rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .visits-card time {
+      display: block;
+      margin-bottom: 1rem;
+      font-family: var(--font-heading);
+      font-size: 1.18rem;
+      font-weight: 600;
+    }
+
+    .visits-card dl {
+      display: grid;
+      gap: .8rem;
+      margin: 0;
+    }
+
+    .visits-card dl div {
+      display: grid;
+      grid-template-columns: 6rem 1fr;
+      gap: .8rem;
+    }
+
+    .visits-card dt {
+      color: var(--muted);
+      font-size: .76rem;
+    }
+
+    .visits-card dd {
+      min-width: 0;
+      margin: 0;
+      font-size: .88rem;
+      overflow-wrap: anywhere;
+    }
+
+    .visits__footer {
+      align-items: stretch;
+      flex-direction: column;
+      padding: 1.2rem 1.15rem;
+    }
+
+    .visits__pagination {
+      justify-content: space-between;
+    }
+  }
+</style>

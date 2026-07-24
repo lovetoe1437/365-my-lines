@@ -27,7 +27,7 @@ const pageTitle = title === "365 моих строк" ? title : `${title} — 36
 const showNavigation = !hideNavigation && shouldShowNavigation(Astro.url.pathname);
 const canonicalURL = new URL(Astro.url.pathname, Astro.url.origin);
 const socialImageURL = new URL(image, Astro.url.origin);
-const privatePath = /^\/(api|login|write|diary\/write|lines\/write|lines\/[^/]+\/edit|pages\/[^/]+\/edit|unspoken\/edit)(\/|$)/.test(Astro.url.pathname);
+const privatePath = /^\/(admin|api|login|write|diary\/write|lines\/write|lines\/[^/]+\/edit|pages\/[^/]+\/edit|unspoken\/edit)(\/|$)/.test(Astro.url.pathname);
 const shouldNoindex = noindex || privatePath;
 ---
 
