@@ -7,7 +7,7 @@ import {
   type EntryImageOwner,
   type EntryImagePlacement,
   type StoredImageMimeType,
-} from "../images/metadata";
+} from "../images/metadata.ts";
 
 export type EntryImageRecord = {
   id: number;

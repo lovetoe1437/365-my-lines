@@ -7,6 +7,7 @@ const PROTECTED_ROUTES = [
   "/write",
   "/api/pages",
   "/api/lines",
+  "/api/images",
   "/api/unspoken",
   "/unspoken/edit",
 ];
