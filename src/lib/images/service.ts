@@ -4,6 +4,7 @@ import {
   createEntryImage,
   deleteEntryImage,
   getEntryImage,
+  getEntryImages,
   updateEntryImage,
   type EntryImageRecord,
 } from "../db/entry-images.ts";
@@ -148,4 +149,16 @@ export async function removeEntryImage(
 
   await deleteStoredEntryImage(bucket, record.object_key);
   return deleteEntryImage(db, id);
+}
+
+export async function removeAllEntryImages(
+  db: D1Database,
+  bucket: R2Bucket,
+  owner: EntryImageOwner,
+): Promise<void> {
+  const records = await getEntryImages(db, owner);
+  for (const record of records) {
+    await deleteStoredEntryImage(bucket, record.object_key);
+    await deleteEntryImage(db, record.id);
+  }
 }

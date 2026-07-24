@@ -3,6 +3,8 @@ import AppLayout from "../../../layouts/AppLayout.astro";
 import DeleteConfirmDialog from "../../../components/DeleteConfirmDialog.astro";
 import { env } from "cloudflare:workers";
 import { getPage } from "../../../lib/db/pages";
+import { getEntryImages } from "../../../lib/db/entry-images";
+import EntryImageEditor from "../../../components/editor/EntryImageEditor.astro";
 import { formatLongDate } from "../../../lib/ui/date";
 import BookOrnament from "../../../components/book/BookOrnament.astro";
 
@@ -18,6 +20,7 @@ if (!page) {
 }
 
 const date = formatLongDate(`${page.entry_date}T00:00:00`);
+const images = await getEntryImages(env.DB, { kind: "diary", id });
 ---
 
 <AppLayout title={`Редактирование — ${page.title}`} class="diary-editor-page">
@@ -40,6 +43,7 @@ const date = formatLongDate(`${page.entry_date}T00:00:00`);
 
       <textarea class="paper__content" id="content" name="content" aria-label="Текст записи" required>{page.content}</textarea>
 
+      <EntryImageEditor images={images} />
       <footer class="paper__footer">
         <p class="draft-indicator" id="draft-status" data-state="idle">Черновик готов</p>
         <p><span id="character-count">0</span> знаков</p>

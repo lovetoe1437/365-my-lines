@@ -4,6 +4,7 @@ import BookLineEditorForm from "../../../components/editor/BookLineEditorForm.as
 import DeleteConfirmDialog from "../../../components/DeleteConfirmDialog.astro";
 import { env } from "cloudflare:workers";
 import { getBookLine } from "../../../lib/db/book-lines";
+import { getEntryImages } from "../../../lib/db/entry-images";
 
 export const prerender = false;
 
@@ -20,6 +21,7 @@ if (!line) {
 }
 
 const readingUrl = `/lines/${String(line.number).padStart(3, "0")}`;
+const images = await getEntryImages(env.DB, { kind: "book", id });
 ---
 
 <AppLayout title={`Изменить — ${line.title}`} class="book-editor-page">
@@ -31,6 +33,7 @@ const readingUrl = `/lines/${String(line.number).padStart(3, "0")}`;
       title={line.title}
       content={line.content}
       readingUrl={readingUrl}
+      images={images}
     />
   </div>
 

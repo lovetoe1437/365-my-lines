@@ -4,6 +4,7 @@ import {
   deletePage,
   updatePage,
 } from "../../../lib/db/pages";
+import { removeAllEntryImages } from "../../../lib/images/service";
 import {
   isValidEntryDate,
   isValidEntryTitle,
@@ -95,6 +96,7 @@ export const DELETE: APIRoute = async ({ params }) => {
       );
     }
 
+    await removeAllEntryImages(env.DB, env.IMAGES_BUCKET, { kind: "diary", id });
     const deleted = await deletePage(env.DB, id);
 
     if (!deleted) {

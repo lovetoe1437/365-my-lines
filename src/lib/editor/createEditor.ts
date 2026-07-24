@@ -11,10 +11,17 @@ import {
   readEditorResponse,
   writeEditorDraft,
 } from "./editorRuntime";
+import { initEntryImageEditor } from "./entryImageEditor";
+import {
+  parseRecoveredEntryId,
+  resolveEntrySaveRequest,
+} from "./entrySaveRecovery";
 
 export type EditorConfig = {
   storageKey: string;
   endpoint: string;
+  updateEndpoint: (id: string | number) => string;
+  ownerKind: "book" | "diary";
   redirectTo: (id: string | number) => string;
   statusSelector?: string;
   idleButtonLabel: string;
@@ -54,6 +61,14 @@ export function initEditor(config: EditorConfig): void {
   const successDelay = config.successDelay ?? 850;
   let autosaveTimer: number | undefined;
   let isDirty = false;
+  const recoveryKey = `${config.storageKey}:created-id`;
+  const imageEditor = initEntryImageEditor(config.ownerKind);
+  let createdId: string | number | null = null;
+  try {
+    createdId = parseRecoveredEntryId(localStorage.getItem(recoveryKey));
+  } catch {
+    // Recovery is optional when browser storage is unavailable.
+  }
 
   const setButtonState = (state: "idle" | "dirty" | "saving" | "saved"): void => {
     button.dataset.state = state;
@@ -147,9 +162,14 @@ export function initEditor(config: EditorConfig): void {
     }
 
     try {
-      const response = await fetch(config.endpoint, {
-        method: "POST",
-        body: new FormData(form),
+      const saveRequest = resolveEntrySaveRequest(
+        createdId,
+        config.endpoint,
+        config.updateEndpoint,
+      );
+      const response = await fetch(saveRequest.url, {
+          method: saveRequest.method,
+          body: new FormData(form),
       });
       const result = await readEditorResponse(response);
 
@@ -169,8 +189,21 @@ export function initEditor(config: EditorConfig): void {
         throw new Error(result.message || "Не удалось сохранить запись.");
       }
 
+      createdId = result.id;
+      try {
+        localStorage.setItem(recoveryKey, String(createdId));
+      } catch {
+        // The current page still keeps the ID and prevents a duplicate submit.
+      }
+      await imageEditor?.save(Number(createdId));
+
       window.clearTimeout(autosaveTimer);
       clearEditorDraft(config.storageKey);
+      try {
+        localStorage.removeItem(recoveryKey);
+      } catch {
+        // Optional recovery storage.
+      }
       isDirty = false;
       setButtonState("saved");
 
@@ -187,7 +220,7 @@ export function initEditor(config: EditorConfig): void {
       });
       document.body.classList.add("is-leaving");
       window.setTimeout(() => {
-        window.location.href = config.redirectTo(result.id as string | number);
+        window.location.href = config.redirectTo(createdId as string | number);
       }, successDelay);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Ошибка сохранения";

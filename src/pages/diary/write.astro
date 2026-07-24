@@ -2,6 +2,7 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import EditorActions from "../../components/editor/EditorActions.astro";
 import EditorMeta from "../../components/editor/EditorMeta.astro";
+import EntryImageEditor from "../../components/editor/EntryImageEditor.astro";
 import BookOrnament from "../../components/book/BookOrnament.astro";
 import { formatDateInputValue } from "../../lib/ui/date";
 import "../../styles/editor.css";
@@ -30,6 +31,7 @@ const isoToday = formatDateInputValue();
 
       <textarea id="content" name="content" aria-label="Текст записи" placeholder="Напиши то, что хочется сохранить…" required></textarea>
 
+      <EntryImageEditor />
       <footer class="diary-paper__footer">
         <EditorMeta class="meta" itemTag="span" strongCount={true} />
         <p id="form-message" aria-live="polite"></p>
@@ -51,6 +53,8 @@ const isoToday = formatDateInputValue();
   initEditor({
     storageKey: "365-my-lines:new-diary-entry",
     endpoint: "/api/pages",
+    updateEndpoint: (id) => `/api/pages/${id}`,
+    ownerKind: "diary",
     redirectTo: (id) => `/pages/${id}`,
     statusSelector: "#draft-toolbar-status",
     idleButtonLabel: "Сохранить запись",

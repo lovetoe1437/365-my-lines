@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { deleteBookLine, updateBookLine } from "../../../lib/db/book-lines";
+import { removeAllEntryImages } from "../../../lib/images/service";
 import {
   isUniqueConstraintError,
   isValidEntryDate,
@@ -58,6 +59,7 @@ export const DELETE: APIRoute = async ({ params }) => {
   try {
     const id = validId(params.id);
     if (!id) return Response.json({ ok: false, message: "Некорректный ID строки." }, { status: 400 });
+    await removeAllEntryImages(env.DB, env.IMAGES_BUCKET, { kind: "book", id });
     const deleted = await deleteBookLine(env.DB, id);
     if (!deleted) {
       return Response.json(

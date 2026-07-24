@@ -5,6 +5,7 @@ import {
   readEditorResponse,
   writeEditorDraft,
 } from "./editorRuntime";
+import { initEntryImageEditor } from "./entryImageEditor";
 
 export function initDiaryPageEditor(): void {
   const root = document.querySelector<HTMLElement>("[data-diary-page-editor]");
@@ -27,6 +28,7 @@ export function initDiaryPageEditor(): void {
   const cancelDelete = document.querySelector<HTMLButtonElement>("#cancel-delete");
   const confirmDelete = document.querySelector<HTMLButtonElement>("#confirm-delete");
   let saveTimer = 0;
+  const imageEditor = initEntryImageEditor("diary");
 
   const updateCount = (): void => {
     if (count && contentInput) count.textContent = String(contentInput.value.length);
@@ -124,6 +126,7 @@ export function initDiaryPageEditor(): void {
         throw new Error(result.message ?? "Не удалось сохранить изменения.");
       }
 
+      await imageEditor?.save(id);
       clearEditorDraft(draftKey);
       saveButton.textContent = "Сохранено ✓";
       setDraftStatus("Изменения сохранены", "saved");

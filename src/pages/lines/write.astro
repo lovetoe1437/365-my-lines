@@ -3,6 +3,7 @@ import AppLayout from "../../layouts/AppLayout.astro";
 import BookOrnament from "../../components/book/BookOrnament.astro";
 import EditorActions from "../../components/editor/EditorActions.astro";
 import EditorMeta from "../../components/editor/EditorMeta.astro";
+import EntryImageEditor from "../../components/editor/EntryImageEditor.astro";
 import { getCollection } from "astro:content";
 import { env } from "cloudflare:workers";
 import { getBookLines } from "../../lib/db/book-lines";
@@ -54,6 +55,7 @@ const isoToday = formatDateInputValue();
         required
       ></textarea>
 
+      <EntryImageEditor />
       <EditorMeta class="paper__footer" />
 
       <p class="paper__message" id="form-message" aria-live="polite"></p>
@@ -77,6 +79,8 @@ const isoToday = formatDateInputValue();
   initEditor({
     storageKey: "365-my-lines:new-book-line",
     endpoint: "/api/lines",
+    updateEndpoint: (id) => `/api/lines/${id}`,
+    ownerKind: "book",
     redirectTo: (id) => `/lines/d-${id}`,
     idleButtonLabel: "Сохранить страницу",
     savedButtonLabel: "Страница сохранена",

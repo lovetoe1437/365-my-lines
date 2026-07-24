@@ -5,6 +5,7 @@ import {
   readEditorResponse,
   writeEditorDraft,
 } from "./editorRuntime";
+import { initEntryImageEditor } from "./entryImageEditor";
 
 export function initBookLineEditor(): void {
   const root = document.querySelector<HTMLElement>("[data-book-line-editor]");
@@ -29,6 +30,7 @@ export function initBookLineEditor(): void {
   const cancelDelete = document.querySelector<HTMLButtonElement>("#cancel-delete");
   const confirmDelete = document.querySelector<HTMLButtonElement>("#confirm-delete");
   let saveTimer = 0;
+  const imageEditor = initEntryImageEditor("book");
 
   const updateCount = (): void => {
     if (count && content) count.textContent = String(content.value.length);
@@ -92,6 +94,7 @@ export function initBookLineEditor(): void {
       ) return;
       if (!response.ok || !result.ok) throw new Error(result.message ?? "Не удалось сохранить.");
 
+      await imageEditor?.save(id);
       clearEditorDraft(draftKey);
       save.textContent = "Сохранено ✓";
       window.setAppToastForNextPage?.({ tone: "success", title: "Изменения сохранены", message: "Страница обновлена и опубликована." });
