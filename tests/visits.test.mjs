@@ -6,6 +6,10 @@ import {
   shouldTrackVisit,
 } from "../src/lib/visits/tracker.ts";
 import { parseVisitClient } from "../src/lib/visits/userAgent.ts";
+import {
+  getVisitPeriodStart,
+  parseVisitQuery,
+} from "../src/lib/visits/query.ts";
 
 const htmlResponse = () =>
   new Response("", {
@@ -121,4 +125,30 @@ test("без секрета или IP посещение безопасно пр
     ),
     null,
   );
+});
+
+test("параметры API нормализуются и limit ограничен", () => {
+  assert.deepEqual(
+    parseVisitQuery(new URLSearchParams("page=3&limit=500&period=30d")),
+    { page: 3, limit: 50, period: "30d" },
+  );
+  assert.deepEqual(parseVisitQuery(new URLSearchParams("page=-1&period=wrong")), {
+    page: 1,
+    limit: 20,
+    period: "7d",
+  });
+});
+
+test("сегодня начинается в полночь Europe/Berlin с летним временем", () => {
+  assert.equal(
+    getVisitPeriodStart("today", new Date("2026-07-24T12:00:00.000Z")),
+    "2026-07-23T22:00:00.000Z",
+  );
+});
+
+test("периоды 7 и 30 дней используют точные скользящие границы", () => {
+  const now = new Date("2026-07-24T12:00:00.000Z");
+  assert.equal(getVisitPeriodStart("7d", now), "2026-07-17T12:00:00.000Z");
+  assert.equal(getVisitPeriodStart("30d", now), "2026-06-24T12:00:00.000Z");
+  assert.equal(getVisitPeriodStart("all", now), null);
 });
