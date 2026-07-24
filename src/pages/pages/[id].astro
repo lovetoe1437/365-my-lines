@@ -2,10 +2,12 @@
 import AppLayout from "../../layouts/AppLayout.astro";
 import DiaryReadingHeader from "../../components/reading/DiaryReadingHeader.astro";
 import ReadingNavigation from "../../components/reading/ReadingNavigation.astro";
+import EntryImages from "../../components/reading/EntryImages.astro";
 import DeleteConfirmDialog from "../../components/DeleteConfirmDialog.astro";
 import { env } from "cloudflare:workers";
 import { getPage, getPageNavigation } from "../../lib/db/pages";
 import { formatLongDate } from "../../lib/ui/date";
+import { getEntryImages } from "../../lib/db/entry-images";
 
 export const prerender = false;
 
@@ -23,7 +25,12 @@ if (!page) {
   return Astro.rewrite("/404");
 }
 
-const navigation = await getPageNavigation(env.DB, id);
+const [navigation, images] = await Promise.all([
+  getPageNavigation(env.DB, id),
+  getEntryImages(env.DB, { kind: "diary", id }),
+]);
+const imagesBefore = images.filter((image) => image.placement === "before");
+const imagesAfter = images.filter((image) => image.placement === "after");
 const pageNumber = String(navigation.position).padStart(3, "0");
 const previousHref = navigation.previous
   ? `/pages/${navigation.previous.id}`
@@ -54,6 +61,8 @@ const nextHref = navigation.next ? `/pages/${navigation.next.id}` : null;
         <span></span>
       </div>
 
+      <EntryImages images={imagesBefore} placement="before" />
+
       <div class="reading__content">
         {
           page.content.split(/\r?\n/).map((paragraph) =>
@@ -61,6 +70,8 @@ const nextHref = navigation.next ? `/pages/${navigation.next.id}` : null;
           )
         }
       </div>
+
+      <EntryImages images={imagesAfter} placement="after" />
 
       <div class="reading__actions">
         <a class="reading__edit" href={`/pages/${page.id}/edit`}>
