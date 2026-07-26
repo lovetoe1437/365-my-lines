@@ -16,6 +16,11 @@ const isReadablePath = (value: unknown): value is string =>
   && !value.startsWith("/api/")
   && !value.startsWith("/admin")
   && !value.startsWith("/media/")
+  && !value.startsWith("/write")
+  && !value.startsWith("/lines/write")
+  && !value.startsWith("/diary/write")
+  && !/^\/(?:lines\/d-\d+|pages\/\d+)\/edit\/?$/.test(value)
+  && !value.startsWith("/unspoken/edit")
   && !value.includes("\\");
 
 export const POST: APIRoute = async ({ request }) => {

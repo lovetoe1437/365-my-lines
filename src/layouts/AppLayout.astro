@@ -29,7 +29,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.url.origin);
 const socialImageURL = new URL(image, Astro.url.origin);
 const privatePath = /^\/(admin|api|login|write|diary\/write|lines\/write|lines\/[^/]+\/edit|pages\/[^/]+\/edit|unspoken\/edit)(\/|$)/.test(Astro.url.pathname);
 const shouldNoindex = noindex || privatePath;
-const shouldTrackEngagement = !/^\/(admin|api|access|login|prologue)(\/|$)/.test(Astro.url.pathname);
+const shouldTrackEngagement = !privatePath
+  && !/^\/(access|prologue)(\/|$)/.test(Astro.url.pathname);
 ---
 
 <!doctype html>
