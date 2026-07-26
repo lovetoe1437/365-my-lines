@@ -32,6 +32,7 @@ pnpm-debug.log*
 
 # Temporary and backup files
 backups/
+full-backups/
 *.tmp
 *.temp
 *.bak

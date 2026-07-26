@@ -1,0 +1,51 @@
+name: Ежемесячный архив сайта
+
+on:
+  schedule:
+    - cron: "15 4 1 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    name: Архив базы и фотографий
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_R2_BACKUP_TOKEN: ${{ secrets.CLOUDFLARE_R2_BACKUP_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 9be9dbd05e5041652082ee0918150abf
+      R2_SOURCE_BUCKET: 365-my-lines-images
+      R2_BACKUP_BUCKET: 365-my-lines-backups
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Экспорт D1
+        run: npm run backup:d1
+
+      - name: Обновить закрытую копию фотографий
+        run: npm run backup:r2
+
+      - name: Подготовить полный архив
+        run: node scripts/export-full-backup-archive.mjs
+
+      - name: Собрать ZIP
+        run: zip -r full-backups/365-my-lines-full-backup.zip full-backups/snapshot
+
+      - name: Сохранить скачиваемый архив
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-full-backup-${{ github.run_id }}
+          path: full-backups/365-my-lines-full-backup.zip
+          if-no-files-found: error
+          retention-days: 90
