@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "365-my-lines",
+  "account_id": "9be9dbd05e5041652082ee0918150abf",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-07-20",
   "compatibility_flags": [
