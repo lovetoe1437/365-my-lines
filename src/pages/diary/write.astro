@@ -29,7 +29,7 @@ const isoToday = formatDateInputValue();
         <div class="diary-paper__divider" aria-hidden="true"><span></span><b>✦</b><span></span></div>
       </div>
 
-      <textarea id="content" name="content" aria-label="Текст записи" placeholder="Напиши то, что хочется сохранить…" required></textarea>
+      <textarea id="content" name="content" aria-label="Текст записи" placeholder="Напиши то, что хочется сохранить…" maxlength="100000" required></textarea>
 
       <EntryImageEditor />
       <footer class="diary-paper__footer">

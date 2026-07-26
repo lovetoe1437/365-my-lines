@@ -6,6 +6,7 @@ import {
 } from "../../../lib/db/pages";
 import { removeAllEntryImages } from "../../../lib/images/service";
 import {
+  isValidEntryContent,
   isValidEntryDate,
   isValidEntryTitle,
 } from "../../../lib/validation/entries";
@@ -42,7 +43,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
     const content = String(formData.get("content") ?? "").trim();
     const entryDate = String(formData.get("entryDate") ?? "").trim();
 
-    if (!isValidEntryTitle(title) || !content || !isValidEntryDate(entryDate)) {
+    if (!isValidEntryTitle(title) || !isValidEntryContent(content) || !isValidEntryDate(entryDate)) {
       return Response.json(
         {
           ok: false,

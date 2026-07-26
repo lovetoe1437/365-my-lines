@@ -4,7 +4,6 @@ import BookOrnament from "../../components/book/BookOrnament.astro";
 import EditorActions from "../../components/editor/EditorActions.astro";
 import EditorMeta from "../../components/editor/EditorMeta.astro";
 import EntryImageEditor from "../../components/editor/EntryImageEditor.astro";
-import { getCollection } from "astro:content";
 import { env } from "cloudflare:workers";
 import { getBookLines } from "../../lib/db/book-lines";
 import { formatDateInputValue } from "../../lib/ui/date";
@@ -12,11 +11,10 @@ import "../../styles/editor.css";
 
 export const prerender = false;
 
-const staticLines = await getCollection("lines");
 const dynamicLines = await getBookLines(env.DB);
 const nextNumber = Math.min(
   365,
-  Math.max(0, ...staticLines.map((line) => line.data.number), ...dynamicLines.map((line) => line.number)) + 1,
+  Math.max(0, ...dynamicLines.map((line) => line.number)) + 1,
 );
 const isoToday = formatDateInputValue();
 ---
@@ -52,6 +50,7 @@ const isoToday = formatDateInputValue();
         name="content"
         aria-label="Текст страницы"
         placeholder="Сегодня достаточно одной строки…"
+        maxlength="100000"
         required
       ></textarea>
 

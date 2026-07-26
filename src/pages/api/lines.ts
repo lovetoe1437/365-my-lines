@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { createBookLine } from "../../lib/db/book-lines";
 import {
   isUniqueConstraintError,
+  isValidEntryContent,
   isValidEntryDate,
   isValidEntryTitle,
 } from "../../lib/validation/entries";
@@ -22,7 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
       number < 1 ||
       number > 365 ||
       !isValidEntryTitle(title) ||
-      !content ||
+      !isValidEntryContent(content) ||
       !isValidEntryDate(lineDate)
     ) {
       return Response.json({ ok: false, message: "Заполни номер, дату, название и текст строки." }, { status: 400 });

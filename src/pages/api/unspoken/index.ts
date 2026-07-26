@@ -2,6 +2,9 @@ import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { updateUnspoken, type UnspokenVisibility } from "../../../lib/db/unspoken";
 
+const MAX_UNSPOKEN_FIELD_LENGTH = 20_000;
+const MAX_UNSPOKEN_TOTAL_LENGTH = 100_000;
+
 export const prerender = false;
 
 const paragraphs = (value: FormDataEntryValue | null) => String(value ?? "")
@@ -30,7 +33,14 @@ export const PUT: APIRoute = async ({ request }) => {
       visibility,
     };
 
-    if (!content.title || !content.opening.length || !content.sectionTitle || !content.story.length) {
+    const textValues = [
+      content.eyebrow, content.title, ...content.opening, content.sectionTitle,
+      ...content.story, content.signature, content.motto, content.version, content.date,
+    ];
+    const exceedsLimit = textValues.some((value) => value.length > MAX_UNSPOKEN_FIELD_LENGTH)
+      || textValues.reduce((total, value) => total + value.length, 0) > MAX_UNSPOKEN_TOTAL_LENGTH;
+
+    if (!content.title || !content.opening.length || !content.sectionTitle || !content.story.length || exceedsLimit) {
       return Response.json({ ok: false, message: "Заголовок, вступление и основной текст не могут быть пустыми." }, { status: 400 });
     }
 

@@ -4,6 +4,7 @@ import { deleteBookLine, updateBookLine } from "../../../lib/db/book-lines";
 import { removeAllEntryImages } from "../../../lib/images/service";
 import {
   isUniqueConstraintError,
+  isValidEntryContent,
   isValidEntryDate,
   isValidEntryTitle,
 } from "../../../lib/validation/entries";
@@ -28,7 +29,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
       number < 1 ||
       number > 365 ||
       !isValidEntryTitle(title) ||
-      !content ||
+      !isValidEntryContent(content) ||
       !isValidEntryDate(lineDate)
     ) {
       return Response.json({ ok: false, message: "Заполни номер, дату, название и текст строки." }, { status: 400 });

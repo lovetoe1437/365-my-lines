@@ -1,7 +1,12 @@
 export const MAX_ENTRY_TITLE_LENGTH = 160;
+export const MAX_ENTRY_CONTENT_LENGTH = 100_000;
 
 export function isValidEntryTitle(title: string): boolean {
   return title.length > 0 && title.length <= MAX_ENTRY_TITLE_LENGTH;
+}
+
+export function isValidEntryContent(content: string): boolean {
+  return content.length > 0 && content.length <= MAX_ENTRY_CONTENT_LENGTH;
 }
 
 export function isValidEntryDate(value: string): boolean {

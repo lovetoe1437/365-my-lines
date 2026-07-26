@@ -28,9 +28,9 @@ const content = await getUnspoken(env.DB);
       <div class="fields">
         <label><span>Надпись над заголовком</span><input name="eyebrow" value={content.eyebrow} /></label>
         <label><span>Заголовок</span><input class="title-input" name="title" value={content.title} required /></label>
-        <label><span>Вступление</span><small>Каждый абзац отделяй пустой строкой.</small><textarea name="opening" rows="10" required>{content.opening.join("\n\n")}</textarea></label>
+        <label><span>Вступление</span><small>Каждый абзац отделяй пустой строкой.</small><textarea name="opening" rows="10" maxlength="20000" required>{content.opening.join("\n\n")}</textarea></label>
         <label><span>Заголовок основной части</span><input name="sectionTitle" value={content.sectionTitle} required /></label>
-        <label><span>Основной текст</span><small>Каждый абзац отделяй пустой строкой.</small><textarea name="story" rows="20" required>{content.story.join("\n\n")}</textarea></label>
+        <label><span>Основной текст</span><small>Каждый абзац отделяй пустой строкой.</small><textarea name="story" rows="20" maxlength="20000" required>{content.story.join("\n\n")}</textarea></label>
 
         <div class="two-columns">
           <label><span>Подпись</span><input name="signature" value={content.signature} /></label>

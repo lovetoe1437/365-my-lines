@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ params, request }) => {
       status: 304,
       headers: {
         ETag: object.httpEtag,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, no-store",
       },
     });
   }
@@ -35,7 +35,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     headers: {
       "Content-Type": metadata.mime_type,
       "Content-Length": String(metadata.size_bytes),
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "private, no-store",
       ETag: object.httpEtag,
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": "inline",
