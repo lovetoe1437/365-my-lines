@@ -36,6 +36,7 @@ test("админка, API, изображения, редакторы и бот�
     "/admin/visits",
     "/api/admin/visits",
     "/media/images/1",
+    "/access",
     "/login",
     "/lines/write",
     "/lines/d-1/edit",

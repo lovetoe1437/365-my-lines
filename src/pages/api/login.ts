@@ -7,7 +7,7 @@ export const POST: APIRoute = async (context) => {
   const formData = await context.request.formData();
   const passwordValue = formData.get("password");
 
-  if (typeof passwordValue !== "string" || passwordValue.length === 0) {
+  if (typeof passwordValue !== "string" || passwordValue.length === 0 || passwordValue.length > 512) {
     return context.redirect("/login?error=invalid", 303);
   }
 

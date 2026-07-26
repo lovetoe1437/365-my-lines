@@ -4,6 +4,7 @@ const EXCLUDED_PREFIXES = [
   "/admin",
   "/api",
   "/media",
+  "/access",
   "/login",
   "/lines/write",
   "/diary/write",

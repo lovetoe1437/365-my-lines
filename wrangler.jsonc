@@ -28,5 +28,11 @@
       "binding": "IMAGES_BUCKET",
       "bucket_name": "365-my-lines-images"
     }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "LOGIN_RATE_LIMIT",
+      "id": "e74b77e3c6d34a8bb5721a5c7e500d0f"
+    }
   ]
 }
