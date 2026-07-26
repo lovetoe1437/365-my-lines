@@ -1,8 +1,8 @@
-name: Резервная копия D1
+name: Полная резервная копия
 
 on:
   schedule:
-    - cron: "30 3 * * 6"
+    - cron: "30 3 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -15,6 +15,10 @@ jobs:
     timeout-minutes: 10
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_R2_BACKUP_TOKEN: ${{ secrets.CLOUDFLARE_R2_BACKUP_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 9be9dbd05e5041652082ee0918150abf
+      R2_SOURCE_BUCKET: 365-my-lines-images
+      R2_BACKUP_BUCKET: 365-my-lines-backups
 
     steps:
       - uses: actions/checkout@v4
@@ -29,10 +33,13 @@ jobs:
       - name: Экспорт D1
         run: npm run backup:d1
 
+      - name: Сохранить базу и фотографии в закрытый R2
+        run: npm run backup:r2
+
       - name: Сохранить зашифрованный архив GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: d1-backup-${{ github.run_id }}
+          name: full-backup-${{ github.run_id }}
           path: backups/*.sql
           if-no-files-found: error
           retention-days: 30
