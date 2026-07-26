@@ -91,7 +91,14 @@ export async function getSiteVisits(
   now = new Date(),
 ): Promise<SiteVisitPage> {
   const periodStart = getVisitPeriodStart(query.period, now);
-  const where = periodStart ? "WHERE visited_at >= ?" : "";
+  const summaryWhere = periodStart ? "WHERE visited_at >= ?" : "";
+  const whereParts = periodStart ? ["visited_at >= ?"] : [];
+  if (query.type !== "all") whereParts.push("visitor_type = ?");
+  const where = whereParts.length > 0 ? `WHERE ${whereParts.join(" AND ")}` : "";
+  const whereValues = [
+    ...(periodStart ? [periodStart] : []),
+    ...(query.type !== "all" ? [query.type] : []),
+  ];
   const countStatement = db.prepare(
     `SELECT COUNT(*) AS count FROM site_visits ${where}`,
   );
@@ -109,15 +116,13 @@ export async function getSiteVisits(
       SUM(CASE WHEN visitor_type = 'unknown' THEN 1 ELSE 0 END) AS unknown,
       SUM(active_seconds) AS active_seconds
     FROM site_visits
-    ${where}
+    ${summaryWhere}
   `);
   const offset = (query.page - 1) * query.limit;
-  const countQuery = periodStart
-    ? countStatement.bind(periodStart)
+  const countQuery = whereValues.length > 0
+    ? countStatement.bind(...whereValues)
     : countStatement;
-  const itemsQuery = periodStart
-    ? itemsStatement.bind(periodStart, query.limit, offset)
-    : itemsStatement.bind(query.limit, offset);
+  const itemsQuery = itemsStatement.bind(...whereValues, query.limit, offset);
   const summaryQuery = periodStart
     ? summaryStatement.bind(periodStart)
     : summaryStatement;

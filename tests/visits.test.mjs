@@ -153,13 +153,18 @@ test("без секрета или IP посещение безопасно пр
 test("параметры API нормализуются и limit ограничен", () => {
   assert.deepEqual(
     parseVisitQuery(new URLSearchParams("page=3&limit=500&period=30d")),
-    { page: 3, limit: 50, period: "30d" },
+    { page: 3, limit: 50, period: "30d", type: "all" },
   );
   assert.deepEqual(parseVisitQuery(new URLSearchParams("page=-1&period=wrong")), {
     page: 1,
     limit: 20,
     period: "7d",
+    type: "all",
   });
+  assert.equal(
+    parseVisitQuery(new URLSearchParams("type=bot")).type,
+    "bot",
+  );
 });
 
 test("сегодня начинается в полночь Europe/Berlin с летним временем", () => {

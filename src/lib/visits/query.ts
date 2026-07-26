@@ -1,10 +1,13 @@
 export const VISIT_PERIODS = ["today", "7d", "30d", "all"] as const;
 export type VisitPeriod = (typeof VISIT_PERIODS)[number];
+export const VISIT_TYPES = ["all", "human", "bot", "unknown"] as const;
+export type VisitType = (typeof VISIT_TYPES)[number];
 
 export type VisitQuery = {
   page: number;
   limit: number;
   period: VisitPeriod;
+  type: VisitType;
 };
 
 const integerParameter = (
@@ -24,11 +27,16 @@ export function parseVisitQuery(searchParams: URLSearchParams): VisitQuery {
   const period = VISIT_PERIODS.includes(periodValue as VisitPeriod)
     ? (periodValue as VisitPeriod)
     : "7d";
+  const typeValue = searchParams.get("type");
+  const type = VISIT_TYPES.includes(typeValue as VisitType)
+    ? (typeValue as VisitType)
+    : "all";
 
   return {
     page: integerParameter(searchParams.get("page"), 1, 1_000_000),
     limit: integerParameter(searchParams.get("limit"), 20, 50),
     period,
+    type,
   };
 }
 

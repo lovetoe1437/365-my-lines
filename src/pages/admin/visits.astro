@@ -37,10 +37,14 @@ export const prerender = false;
     </div>
 
     <div class="visits__insights" data-insights hidden>
-      <article><span>Подтверждённые люди</span><strong data-human-count>—</strong></article>
-      <article><span>Вероятные боты</span><strong data-bot-count>—</strong></article>
-      <article><span>Не определено</span><strong data-unknown-count>—</strong></article>
+      <button type="button" data-visitor-filter="human"><span>Подтверждённые люди</span><strong data-human-count>—</strong></button>
+      <button type="button" data-visitor-filter="bot"><span>Вероятные боты</span><strong data-bot-count>—</strong></button>
+      <button type="button" data-visitor-filter="unknown"><span>Не определено</span><strong data-unknown-count>—</strong></button>
       <article><span>Активное время</span><strong data-active-time>—</strong></article>
+    </div>
+    <div class="visits__filters" data-visitor-filters hidden>
+      <span>Показать:</span>
+      <button type="button" data-visitor-filter="all">Все посещения</button>
     </div>
 
     <div class="visits__status" data-status role="status" aria-live="polite">
@@ -131,9 +135,12 @@ export const prerender = false;
   const botCount = document.querySelector<HTMLElement>("[data-bot-count]");
   const unknownCount = document.querySelector<HTMLElement>("[data-unknown-count]");
   const activeTime = document.querySelector<HTMLElement>("[data-active-time]");
+  const visitorFilters = document.querySelector<HTMLElement>("[data-visitor-filters]");
+  const visitorFilterButtons = document.querySelectorAll<HTMLButtonElement>("[data-visitor-filter]");
   let currentPage = 1;
   let totalPages = 0;
   let requestNumber = 0;
+  let selectedType: "all" | "human" | "bot" | "unknown" = "all";
 
   const dateFormatter = new Intl.DateTimeFormat("ru-RU", {
     timeZone: "Europe/Berlin",
@@ -245,7 +252,6 @@ export const prerender = false;
       status.textContent = message;
     }
     if (content) content.hidden = true;
-    if (insights) insights.hidden = true;
   };
 
   const renderInsights = (data: VisitResponse) => {
@@ -254,6 +260,11 @@ export const prerender = false;
     if (unknownCount) unknownCount.textContent = String(data.summary.unknown);
     if (activeTime) activeTime.textContent = formatDuration(data.summary.activeSeconds);
     if (insights) insights.hidden = false;
+    if (visitorFilters) visitorFilters.hidden = false;
+    visitorFilterButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.visitorFilter === selectedType);
+      button.setAttribute("aria-pressed", String(button.dataset.visitorFilter === selectedType));
+    });
   };
 
   const loadVisits = async () => {
@@ -263,12 +274,13 @@ export const prerender = false;
     try {
       const selectedPeriod = period?.value ?? "7d";
       const response = await fetch(
-        `/api/admin/visits?page=${currentPage}&limit=20&period=${selectedPeriod}`,
+        `/api/admin/visits?page=${currentPage}&limit=20&period=${selectedPeriod}&type=${selectedType}`,
         { headers: { Accept: "application/json" } },
       );
       const data = (await response.json()) as VisitResponse;
       if (ownRequest !== requestNumber) return;
       if (!response.ok) throw new Error(data.message);
+      renderInsights(data);
       if (data.items.length === 0) {
         showMessage("Посещений пока нет");
         return;
@@ -276,7 +288,6 @@ export const prerender = false;
 
       tableBody?.replaceChildren(...data.items.map(renderTableRow));
       cards?.replaceChildren(...data.items.map(renderCard));
-      renderInsights(data);
       totalPages = data.totalPages;
 
       const firstItem = (data.page - 1) * data.limit + 1;
@@ -295,6 +306,8 @@ export const prerender = false;
       const url = new URL(window.location.href);
       url.searchParams.set("period", selectedPeriod);
       url.searchParams.set("page", String(data.page));
+      if (selectedType === "all") url.searchParams.delete("type");
+      else url.searchParams.set("type", selectedType);
       history.replaceState(null, "", url);
     } catch {
       if (ownRequest === requestNumber) {
@@ -312,6 +325,10 @@ export const prerender = false;
   if (Number.isSafeInteger(initialPage) && initialPage > 0) {
     currentPage = initialPage;
   }
+  const initialType = initialUrl.searchParams.get("type");
+  if (["human", "bot", "unknown"].includes(initialType ?? "")) {
+    selectedType = initialType as typeof selectedType;
+  }
 
   period?.addEventListener("change", () => {
     currentPage = 1;
@@ -328,6 +345,15 @@ export const prerender = false;
       currentPage += 1;
       void loadVisits();
     }
+  });
+  visitorFilterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextType = button.dataset.visitorFilter;
+      if (!["all", "human", "bot", "unknown"].includes(nextType ?? "")) return;
+      selectedType = nextType as typeof selectedType;
+      currentPage = 1;
+      void loadVisits();
+    });
   });
 
   void loadVisits();
@@ -428,7 +454,8 @@ export const prerender = false;
     margin: 0 0 1.25rem;
   }
 
-  .visits__insights article {
+  .visits__insights article,
+  .visits__insights button {
     display: grid;
     gap: .45rem;
     min-height: 96px;
@@ -436,6 +463,15 @@ export const prerender = false;
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
     background: rgba(255, 252, 246, .52);
+    color: inherit;
+    text-align: left;
+  }
+
+  .visits__insights button { cursor: pointer; }
+  .visits__insights button:hover,
+  .visits__insights button.is-active {
+    border-color: var(--accent);
+    background: rgba(216, 163, 76, .12);
   }
 
   .visits__insights span {
@@ -450,6 +486,32 @@ export const prerender = false;
     font-size: 1.6rem;
     font-weight: 600;
     line-height: 1;
+  }
+
+  .visits__filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .65rem;
+    margin: 0 0 1.25rem;
+    color: var(--muted);
+    font-size: .8rem;
+  }
+
+  .visits__filters button {
+    padding: .42rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 252, 246, .62);
+    color: var(--accent-dark);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .visits__filters button:hover,
+  .visits__filters button.is-active {
+    border-color: var(--accent);
+    background: rgba(216, 163, 76, .12);
   }
 
   .visits__status {
