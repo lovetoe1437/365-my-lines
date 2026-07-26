@@ -12,8 +12,13 @@ const EXCLUDED_PREFIXES = [
   "/unspoken/edit",
 ];
 
-const BOT_USER_AGENT =
-  /bot|crawler|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegrambot|discordbot|headless|lighthouse|pagespeed|curl|wget/i;
+const BOT_USER_AGENTS = [
+  ["Googlebot", /googlebot/i],
+  ["Bingbot", /bingbot|bingpreview/i],
+  ["YandexBot", /yandexbot/i],
+  ["Социальный предпросмотр", /facebookexternalhit|whatsapp|telegrambot|discordbot/i],
+  ["Технический бот", /bot|crawler|spider|slurp|headless|lighthouse|pagespeed|curl|wget/i],
+] as const;
 
 type CloudflareRequest = Request & {
   cf?: {
@@ -31,9 +36,22 @@ export type VisitInput = {
   deviceName: string | null;
   operatingSystem: string | null;
   browser: string | null;
+  visitorType: "human" | "bot" | "unknown";
+  botName: string | null;
+  activeSeconds: number;
   path: string;
   dedupeKey: string;
 };
+
+export function classifyVisitor(userAgent: string): {
+  visitorType: "bot" | "unknown";
+  botName: string | null;
+} {
+  const match = BOT_USER_AGENTS.find(([, expression]) => expression.test(userAgent));
+  return match
+    ? { visitorType: "bot", botName: match[0] }
+    : { visitorType: "unknown", botName: null };
+}
 
 const toHex = (buffer: ArrayBuffer) =>
   [...new Uint8Array(buffer)]
@@ -88,13 +106,17 @@ export function shouldTrackVisit(
   if (/prefetch|prerender/i.test(purpose)) return false;
 
   const userAgent = request.headers.get("user-agent")?.trim() ?? "";
-  return userAgent.length > 0 && !BOT_USER_AGENT.test(userAgent);
+  return userAgent.length > 0;
 }
 
 export async function createVisitInput(
   request: Request,
   secret: string | undefined,
   now = new Date(),
+  insights: {
+    visitorType?: "human";
+    activeSeconds?: number;
+  } = {},
 ): Promise<VisitInput | null> {
   const ip = request.headers.get("cf-connecting-ip")?.trim();
   const userAgent = request.headers.get("user-agent")?.trim();
@@ -108,6 +130,7 @@ export async function createVisitInput(
     : null;
   const city = cf?.city?.trim() || null;
   const client = parseVisitClient(userAgent);
+  const classification = classifyVisitor(userAgent);
   const minuteBucket = Math.floor(now.getTime() / 60_000);
   const dedupeKey = await createDedupeKey(
     secret,
@@ -123,6 +146,9 @@ export async function createVisitInput(
     deviceName: client.deviceName,
     operatingSystem: client.operatingSystem,
     browser: client.browser,
+    visitorType: insights.visitorType ?? classification.visitorType,
+    botName: insights.visitorType === "human" ? null : classification.botName,
+    activeSeconds: Math.max(0, Math.min(43_200, Math.round(insights.activeSeconds ?? 0))),
     path,
     dedupeKey,
   };

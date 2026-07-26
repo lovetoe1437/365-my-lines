@@ -13,6 +13,9 @@ export type SiteVisitRecord = {
   operating_system: string | null;
   browser: string | null;
   path: string;
+  visitor_type: "human" | "bot" | "unknown";
+  bot_name: string | null;
+  active_seconds: number;
 };
 
 export type SiteVisitPage = {
@@ -21,11 +24,18 @@ export type SiteVisitPage = {
   limit: number;
   total: number;
   totalPages: number;
+  summary: {
+    human: number;
+    bot: number;
+    unknown: number;
+    activeSeconds: number;
+  };
 };
 
 const visitColumns = `
   id, visited_at, country, country_code, city,
-  device_type, device_name, operating_system, browser, path
+  device_type, device_name, operating_system, browser, path,
+  visitor_type, bot_name, active_seconds
 `;
 
 export async function recordSiteVisit(
@@ -40,12 +50,22 @@ export async function recordSiteVisit(
       `),
     db
       .prepare(`
-        INSERT OR IGNORE INTO site_visits (
+        INSERT INTO site_visits (
           visited_at, country, country_code, city,
           device_type, device_name, operating_system, browser,
-          path, dedupe_key
+          path, visitor_type, bot_name, active_seconds, dedupe_key
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(dedupe_key) DO UPDATE SET
+          visitor_type = CASE
+            WHEN excluded.visitor_type = 'human' THEN 'human'
+            ELSE site_visits.visitor_type
+          END,
+          bot_name = CASE
+            WHEN excluded.visitor_type = 'human' THEN NULL
+            ELSE COALESCE(site_visits.bot_name, excluded.bot_name)
+          END,
+          active_seconds = MAX(site_visits.active_seconds, excluded.active_seconds)
       `)
       .bind(
         visit.visitedAt,
@@ -57,6 +77,9 @@ export async function recordSiteVisit(
         visit.operatingSystem,
         visit.browser,
         visit.path,
+        visit.visitorType,
+        visit.botName,
+        visit.activeSeconds,
         visit.dedupeKey,
       ),
   ]);
@@ -79,6 +102,15 @@ export async function getSiteVisits(
     ORDER BY visited_at DESC, id DESC
     LIMIT ? OFFSET ?
   `);
+  const summaryStatement = db.prepare(`
+    SELECT
+      SUM(CASE WHEN visitor_type = 'human' THEN 1 ELSE 0 END) AS human,
+      SUM(CASE WHEN visitor_type = 'bot' THEN 1 ELSE 0 END) AS bot,
+      SUM(CASE WHEN visitor_type = 'unknown' THEN 1 ELSE 0 END) AS unknown,
+      SUM(active_seconds) AS active_seconds
+    FROM site_visits
+    ${where}
+  `);
   const offset = (query.page - 1) * query.limit;
   const countQuery = periodStart
     ? countStatement.bind(periodStart)
@@ -86,10 +118,19 @@ export async function getSiteVisits(
   const itemsQuery = periodStart
     ? itemsStatement.bind(periodStart, query.limit, offset)
     : itemsStatement.bind(query.limit, offset);
+  const summaryQuery = periodStart
+    ? summaryStatement.bind(periodStart)
+    : summaryStatement;
 
-  const [countRow, itemsResult] = await Promise.all([
+  const [countRow, itemsResult, summaryRow] = await Promise.all([
     countQuery.first<{ count: number }>(),
     itemsQuery.all<SiteVisitRecord>(),
+    summaryQuery.first<{
+      human: number | null;
+      bot: number | null;
+      unknown: number | null;
+      active_seconds: number | null;
+    }>(),
   ]);
   const total = countRow?.count ?? 0;
 
@@ -99,5 +140,11 @@ export async function getSiteVisits(
     limit: query.limit,
     total,
     totalPages: total === 0 ? 0 : Math.ceil(total / query.limit),
+    summary: {
+      human: summaryRow?.human ?? 0,
+      bot: summaryRow?.bot ?? 0,
+      unknown: summaryRow?.unknown ?? 0,
+      activeSeconds: summaryRow?.active_seconds ?? 0,
+    },
   };
 }

@@ -29,6 +29,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.url.origin);
 const socialImageURL = new URL(image, Astro.url.origin);
 const privatePath = /^\/(admin|api|login|write|diary\/write|lines\/write|lines\/[^/]+\/edit|pages\/[^/]+\/edit|unspoken\/edit)(\/|$)/.test(Astro.url.pathname);
 const shouldNoindex = noindex || privatePath;
+const shouldTrackEngagement = !/^\/(admin|api|access|login|prologue)(\/|$)/.test(Astro.url.pathname);
 ---
 
 <!doctype html>
@@ -75,5 +76,42 @@ const shouldNoindex = noindex || privatePath;
     </main>
     <AppDialog />
     <AppToast />
+    {shouldTrackEngagement && (
+      <script>
+        const startedAt = Date.now();
+        let visibleSince = document.visibilityState === "visible" ? performance.now() : null;
+        let activeMilliseconds = 0;
+        let sent = false;
+
+        const updateActiveTime = () => {
+          if (visibleSince !== null) {
+            activeMilliseconds += performance.now() - visibleSince;
+            visibleSince = null;
+          }
+        };
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            visibleSince = performance.now();
+          } else {
+            updateActiveTime();
+          }
+        });
+
+        window.addEventListener("pagehide", () => {
+          if (sent) return;
+          updateActiveTime();
+          sent = true;
+          navigator.sendBeacon(
+            "/api/visits/engagement",
+            JSON.stringify({
+              path: window.location.pathname,
+              startedAt,
+              activeSeconds: Math.round(activeMilliseconds / 1000),
+            }),
+          );
+        }, { once: true });
+      </script>
+    )}
   </body>
 </html>

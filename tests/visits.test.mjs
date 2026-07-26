@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  classifyVisitor,
   createVisitInput,
   shouldTrackVisit,
 } from "../src/lib/visits/tracker.ts";
@@ -31,7 +32,7 @@ test("публичная HTML-страница записывается", () => 
   assert.equal(shouldTrackVisit(browserRequest(), htmlResponse()), true);
 });
 
-test("админка, API, изображения, редакторы и боты не записываются", () => {
+test("админка, API, изображения и редакторы не записываются", () => {
   for (const path of [
     "/admin/visits",
     "/api/admin/visits",
@@ -50,8 +51,19 @@ test("админка, API, изображения, редакторы и бот�
       browserRequest("/", { "user-agent": "Googlebot/2.1" }),
       htmlResponse(),
     ),
-    false,
+    true,
   );
+});
+
+test("боты и неизвестные клиенты классифицируются без ложного определения человека", () => {
+  assert.deepEqual(classifyVisitor("Googlebot/2.1"), {
+    visitorType: "bot",
+    botName: "Googlebot",
+  });
+  assert.deepEqual(classifyVisitor("Mozilla/5.0 Safari/605.1.15"), {
+    visitorType: "unknown",
+    botName: null,
+  });
 });
 test("не-HTML и предварительная загрузка не записываются", () => {
   assert.equal(
@@ -115,6 +127,16 @@ test("HMAC дедупликации стабилен в пределах мин�
   assert.equal(first.dedupeKey, repeated?.dedupeKey);
   assert.notEqual(first.dedupeKey, later?.dedupeKey);
   assert.equal(first.path, "/prologue");
+  assert.equal(first.visitorType, "unknown");
+
+  const human = await createVisitInput(
+    request,
+    secret,
+    new Date("2026-07-24T10:00:05.000Z"),
+    { visitorType: "human", activeSeconds: 75 },
+  );
+  assert.equal(human?.visitorType, "human");
+  assert.equal(human?.activeSeconds, 75);
 });
 
 test("без секрета или IP посещение безопасно пропускается", async () => {

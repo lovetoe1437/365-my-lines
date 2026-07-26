@@ -36,6 +36,13 @@ export const prerender = false;
       <span></span><b>✦</b><span></span>
     </div>
 
+    <div class="visits__insights" data-insights hidden>
+      <article><span>Подтверждённые люди</span><strong data-human-count>—</strong></article>
+      <article><span>Вероятные боты</span><strong data-bot-count>—</strong></article>
+      <article><span>Не определено</span><strong data-unknown-count>—</strong></article>
+      <article><span>Активное время</span><strong data-active-time>—</strong></article>
+    </div>
+
     <div class="visits__status" data-status role="status" aria-live="polite">
       Загружаем историю…
     </div>
@@ -49,6 +56,8 @@ export const prerender = false;
               <th scope="col">Страна и город</th>
               <th scope="col">Устройство</th>
               <th scope="col">Браузер</th>
+              <th scope="col">Посетитель</th>
+              <th scope="col">Время</th>
               <th scope="col">Страница</th>
             </tr>
           </thead>
@@ -86,6 +95,9 @@ export const prerender = false;
     operating_system: string | null;
     browser: string | null;
     path: string;
+    visitor_type: "human" | "bot" | "unknown";
+    bot_name: string | null;
+    active_seconds: number;
   };
 
   type VisitResponse = {
@@ -94,6 +106,12 @@ export const prerender = false;
     limit: number;
     total: number;
     totalPages: number;
+    summary: {
+      human: number;
+      bot: number;
+      unknown: number;
+      activeSeconds: number;
+    };
     message?: string;
   };
 
@@ -108,6 +126,11 @@ export const prerender = false;
   const pageLabel = document.querySelector<HTMLElement>("[data-page-label]");
   const previous = document.querySelector<HTMLButtonElement>("[data-previous]");
   const next = document.querySelector<HTMLButtonElement>("[data-next]");
+  const insights = document.querySelector<HTMLElement>("[data-insights]");
+  const humanCount = document.querySelector<HTMLElement>("[data-human-count]");
+  const botCount = document.querySelector<HTMLElement>("[data-bot-count]");
+  const unknownCount = document.querySelector<HTMLElement>("[data-unknown-count]");
+  const activeTime = document.querySelector<HTMLElement>("[data-active-time]");
   let currentPage = 1;
   let totalPages = 0;
   let requestNumber = 0;
@@ -134,6 +157,20 @@ export const prerender = false;
     [item.device_name, item.operating_system].filter(Boolean).join(" · ") ||
     "Устройство неизвестно";
 
+  const visitorText = (item: VisitItem) => {
+    if (item.visitor_type === "human") return "Человек";
+    if (item.visitor_type === "bot") return item.bot_name ? `Бот · ${item.bot_name}` : "Вероятный бот";
+    return "Не определено";
+  };
+
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return "—";
+    if (seconds < 60) return `${seconds} сек`;
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return rest ? `${minutes} мин ${rest} сек` : `${minutes} мин`;
+  };
+
   const appendTextCell = (row: HTMLTableRowElement, value: string) => {
     const cell = document.createElement("td");
     cell.textContent = value;
@@ -146,6 +183,8 @@ export const prerender = false;
     appendTextCell(row, locationText(item));
     appendTextCell(row, deviceText(item));
     appendTextCell(row, item.browser || "Браузер неизвестен");
+    appendTextCell(row, visitorText(item));
+    appendTextCell(row, formatDuration(item.active_seconds));
     const pathCell = document.createElement("td");
     const path = document.createElement("code");
     path.textContent = item.path;
@@ -185,6 +224,8 @@ export const prerender = false;
     appendCardField(details, "Место", locationText(item));
     appendCardField(details, "Устройство", deviceText(item));
     appendCardField(details, "Браузер", item.browser || "Неизвестен");
+    appendCardField(details, "Посетитель", visitorText(item));
+    appendCardField(details, "Активное время", formatDuration(item.active_seconds));
     appendCardField(details, "Страница", item.path, true);
     card.append(date, details);
     return card;
@@ -204,6 +245,15 @@ export const prerender = false;
       status.textContent = message;
     }
     if (content) content.hidden = true;
+    if (insights) insights.hidden = true;
+  };
+
+  const renderInsights = (data: VisitResponse) => {
+    if (humanCount) humanCount.textContent = String(data.summary.human);
+    if (botCount) botCount.textContent = String(data.summary.bot);
+    if (unknownCount) unknownCount.textContent = String(data.summary.unknown);
+    if (activeTime) activeTime.textContent = formatDuration(data.summary.activeSeconds);
+    if (insights) insights.hidden = false;
   };
 
   const loadVisits = async () => {
@@ -226,6 +276,7 @@ export const prerender = false;
 
       tableBody?.replaceChildren(...data.items.map(renderTableRow));
       cards?.replaceChildren(...data.items.map(renderCard));
+      renderInsights(data);
       totalPages = data.totalPages;
 
       const firstItem = (data.page - 1) * data.limit + 1;
@@ -370,6 +421,37 @@ export const prerender = false;
     font-size: .62rem;
   }
 
+  .visits__insights {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .8rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .visits__insights article {
+    display: grid;
+    gap: .45rem;
+    min-height: 96px;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 252, 246, .52);
+  }
+
+  .visits__insights span {
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.35;
+  }
+
+  .visits__insights strong {
+    color: var(--accent-dark);
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
   .visits__status {
     padding: clamp(3rem, 8vw, 6rem) 1rem;
     border-top: 1px solid var(--line);
@@ -477,6 +559,10 @@ export const prerender = false;
 
     .visits__period {
       min-width: 0;
+    }
+
+    .visits__insights {
+      grid-template-columns: 1fr 1fr;
     }
 
     .visits__table-wrap {
