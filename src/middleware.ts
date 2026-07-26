@@ -31,6 +31,37 @@ const PUBLIC_ROUTES = new Set([
   "/sitemap.xml",
 ]);
 
+const TRUSTED_FORM_ORIGINS = new Set([
+  "https://365mylines.com",
+  "https://www.365mylines.com",
+  "https://365-my-lines.pages.dev",
+]);
+
+const isUnsafeRequest = (request: Request) =>
+  !["GET", "HEAD", "OPTIONS"].includes(request.method);
+
+const hasTrustedFormOrigin = (context: APIContext) => {
+  if (!isUnsafeRequest(context.request)) return true;
+
+  const origin = context.request.headers.get("origin");
+  if (origin && origin !== "null") {
+    return TRUSTED_FORM_ORIGINS.has(origin) || origin === context.url.origin;
+  }
+
+  const referer = context.request.headers.get("referer");
+  if (referer) {
+    try {
+      const refererOrigin = new URL(referer).origin;
+      return TRUSTED_FORM_ORIGINS.has(refererOrigin) || refererOrigin === context.url.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  // Safari can omit Origin and Referer on a same-site form submission.
+  return context.request.headers.get("sec-fetch-site") !== "cross-site";
+};
+
 const isPublicRoute = (pathname: string) =>
   PUBLIC_ROUTES.has(pathname) || pathname.startsWith("/_astro/");
 
@@ -58,6 +89,10 @@ const readerLoginUrl = (context: APIContext) => {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = context.url.pathname;
+  if (!hasTrustedFormOrigin(context)) {
+    return applySecurityHeaders(new Response("Forbidden", { status: 403 }), true);
+  }
+
   if (!isPublicRoute(pathname) && !(await isReader(context))) {
     return applySecurityHeaders(context.redirect(readerLoginUrl(context), 302), true);
   }
