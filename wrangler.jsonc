@@ -32,6 +32,10 @@
   ],
   "kv_namespaces": [
     {
+      "binding": "SESSION",
+      "id": "e77488fc844a4c74bee3de850ad47ca7"
+    },
+    {
       "binding": "LOGIN_RATE_LIMIT",
       "id": "e74b77e3c6d34a8bb5721a5c7e500d0f"
     }
