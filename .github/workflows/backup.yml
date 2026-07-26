@@ -27,15 +27,9 @@ jobs:
       - run: npm ci
 
       - name: Экспорт D1
-        if: env.CLOUDFLARE_API_TOKEN != ''
         run: npm run backup:d1
 
-      - name: Сообщить об отсутствии токена
-        if: env.CLOUDFLARE_API_TOKEN == ''
-        run: echo "Backup skipped: add CLOUDFLARE_API_TOKEN in GitHub Actions secrets."
-
       - name: Сохранить зашифрованный архив GitHub
-        if: env.CLOUDFLARE_API_TOKEN != ''
         uses: actions/upload-artifact@v4
         with:
           name: d1-backup-${{ github.run_id }}
