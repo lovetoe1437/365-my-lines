@@ -12,6 +12,8 @@ import {
   recordFailedLogin,
 } from "../../lib/auth/login-rate-limit";
 
+export const GET: APIRoute = (context) => context.redirect("/access", 302);
+
 export const POST: APIRoute = async (context) => {
   const formData = await context.request.formData();
   const passwordValue = formData.get("password");
